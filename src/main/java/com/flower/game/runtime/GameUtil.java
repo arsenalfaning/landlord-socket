@@ -3,9 +3,14 @@ package com.flower.game.runtime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-//import java.util.concurrent.ThreadLocalRandom;
 
 public class GameUtil {
+
+    public static final Byte Style_Heart = 1; //红桃
+    public static final Byte Style_Spade = 2; //黑桃
+    public static final Byte Style_Diamond = 3; //方块
+    public static final Byte Style_Club = 4; //梅花
+    public static final Byte Style_Joker = 5; //大小猫🐱
 
     public static final Byte Heart_1 = (byte) 0x11; //红桃1
     public static final Byte Heart_2 = (byte) 0x12; //红桃2
