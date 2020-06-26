@@ -15,7 +15,7 @@
                 console.log("open");
                 ws.send(JSON.stringify({
                     'cmd': 'room',
-                    'data': '{}',
+                    'data': {room: 1},
                 })); //将消息发送到服务端
             }
             ws.onmessage = function(e){

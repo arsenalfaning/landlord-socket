@@ -1,9 +1,9 @@
 package com.flower.game.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flower.game.dto.RoomInfo;
+import com.flower.game.landlord.cmd.RoomCmd;
+import com.flower.game.landlord.parameter.RoomParameter;
 import com.flower.game.socket.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
@@ -18,15 +18,15 @@ import reactor.core.publisher.Mono;
 @Component
 public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
 
-    private static final RoomInfo Room_Info = new RoomInfo();
-
 //    private final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(2);
     private final ObjectMapper objectMapper;
     private final SocketRegister socketRegister;
+    private final RoomCmd roomCmd;
 
-    public GameHandler(ObjectMapper objectMapper, SocketRegister socketRegister) {
+    public GameHandler(ObjectMapper objectMapper, SocketRegister socketRegister, RoomCmd roomCmd) {
         this.objectMapper = objectMapper;
         this.socketRegister = socketRegister;
+        this.roomCmd = roomCmd;
     }
 
     private void log(Object object) {
@@ -64,17 +64,18 @@ public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
                 SocketIn socketIn = readTextMessage(text);
                 if (socketIn != null) {
                     if (SocketConst.CMD_ROOM.equals(socketIn.getCmd())) {
-
+                        SocketIn<RoomParameter> roomIn = readObjectMessage(text, RoomParameter.class);
+                        SocketOut<String> so = roomCmd.execute(roomIn, gamerId);
+                        return Mono.just( webSocketSession.textMessage(writeValue(so)) );
                     }
                 }
             }
-            return Mono.just(webSocketSession.textMessage("ok"));
+            return Mono.just(webSocketSession.textMessage("error"));
         });
 
         Mono<Void> output = webSocketSession.send(Flux.create(sink -> {
             SocketSender socketSender = new SocketSender(webSocketSession, sink);
             socketRegister.register(gamerId, socketSender);
-            Room_Info.addGamer(gamerId);
         }));
 
         return Mono.zip(webSocketSession.send(common), output).then();
@@ -87,15 +88,30 @@ public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
         return configuration;
     }
 
-    public SocketIn<String> readTextMessage(String text) {
+    public SocketIn readTextMessage(String text) {
         try {
-            return objectMapper.readValue(text, new TypeReference<SocketIn<String>> (){});
+            return objectMapper.readValue(text, SocketIn.class);
         } catch (JsonProcessingException e) {
+            e.printStackTrace();
             return null;
         }
     }
 
-    public <T> SocketIn<T> readObjectMessage(String text, Class<T> clazz) throws JsonProcessingException {
-        return objectMapper.readValue(text, new TypeReference<SocketIn<T>> (){});
+    public <T> SocketIn<T> readObjectMessage(String text, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(text, objectMapper.getTypeFactory().constructParametricType(SocketIn.class, clazz));
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public String writeValue(Object obj) {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return "";
+        }
     }
 }
