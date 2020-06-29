@@ -3,6 +3,7 @@ package com.flower.game.landlord.vo;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class GameVo {
@@ -13,5 +14,6 @@ public class GameVo {
     private GamerVo next;//下家
     private String playingGamer;//当前需要出牌的玩家-myself,prev,next
     private LocalDateTime playingDeadline;//出牌截止时间
-
+    private GamerPlayVo playing;//当前出牌
+    private List<GamerPlayVo> playHistory;//当回合出牌历史
 }

@@ -37,4 +37,17 @@ public class LandlordCards implements Comparable<LandlordCards> {
         int i2 = c2 == null ? 0 : c2.size();
         return i1 == i2;
     }
+
+    public Byte getType() {
+        return this.type;
+    }
+
+    public int getMainSize() {
+        return this.main.size();
+    }
+
+    public int getAppendSize() {
+        if (this.append == null) return 0;
+        return this.append.size();
+    }
 }

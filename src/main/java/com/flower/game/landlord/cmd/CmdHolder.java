@@ -2,6 +2,7 @@ package com.flower.game.landlord.cmd;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flower.game.landlord.parameter.PlayParameter;
 import com.flower.game.landlord.parameter.RoomParameter;
 import com.flower.game.socket.SocketConst;
 import com.flower.game.socket.SocketIn;
@@ -12,14 +13,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class CmdHolder{
 
-    private ObjectMapper objectMapper;
-    private RoomCmd roomCmd;
-    private ReadyCmd readyCmd;
+    private final ObjectMapper objectMapper;
+    private final RoomCmd roomCmd;
+    private final ReadyCmd readyCmd;
+    private final PlayCmd playCmd;
 
-    public CmdHolder(ObjectMapper objectMapper, RoomCmd roomCmd, ReadyCmd readyCmd) {
+    public CmdHolder(ObjectMapper objectMapper, RoomCmd roomCmd, ReadyCmd readyCmd, PlayCmd playCmd) {
         this.objectMapper = objectMapper;
         this.roomCmd = roomCmd;
         this.readyCmd = readyCmd;
+        this.playCmd = playCmd;
     }
 
     public String execute(String text, String gamerId) {
@@ -33,6 +36,9 @@ public class CmdHolder{
                 case SocketConst.CMD_READY:
                     SocketOut<Boolean> readyOut = readyCmd.execute(null, gamerId);
                     return writeValue(readyOut);
+                case SocketConst.CMD_PLAY:
+                    return writeValue(playCmd.execute(readObjectMessage(text, PlayParameter.class), gamerId));
+
             }
         }
         return "";

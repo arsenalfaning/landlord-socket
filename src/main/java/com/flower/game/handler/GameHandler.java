@@ -1,6 +1,7 @@
 package com.flower.game.handler;
 
 import com.flower.game.landlord.cmd.CmdHolder;
+import com.flower.game.room.RoomService;
 import com.flower.game.socket.SocketRegister;
 import com.flower.game.socket.SocketSender;
 import com.flower.game.socket.SocketUtil;
@@ -20,10 +21,12 @@ public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
 //    private final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(2);
     private final SocketRegister socketRegister;
     private final CmdHolder cmdHolder;
+    private final RoomService roomService;
 
-    public GameHandler(SocketRegister socketRegister, CmdHolder cmdHolder) {
+    public GameHandler(SocketRegister socketRegister, CmdHolder cmdHolder, RoomService roomService) {
         this.socketRegister = socketRegister;
         this.cmdHolder = cmdHolder;
+        this.roomService = roomService;
     }
 
     private void log(Object object) {
@@ -52,6 +55,7 @@ public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
         }).doOnComplete(() -> {
             log("complete");
             socketRegister.remove(gamerId);
+            roomService.removeGamer(gamerId);
         }).doOnNext(message -> {
             log("next");
         }).concatMap(message -> {

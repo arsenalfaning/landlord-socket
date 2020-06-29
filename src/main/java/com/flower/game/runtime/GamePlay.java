@@ -1,5 +1,7 @@
 package com.flower.game.runtime;
 
+import java.util.List;
+
 public interface GamePlay {
 
     /**
@@ -48,9 +50,14 @@ public interface GamePlay {
     boolean sort();
 
     /**
+     * 切换出牌方
+     */
+    void turn();
+
+    /**
      * 出牌
      */
-    boolean play(PlayData playData);
+    boolean play(List<Byte> cards, String gamerId);
 
     /**
      * 结束

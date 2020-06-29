@@ -12,11 +12,11 @@ public class GameRuntime {
     //玩家数组
     public List<GamerRuntime> gamerRuntimeList;
 
-    //当前到时间的玩家id
-    public String turnGamerId;
+    //当前需要出牌的玩家index
+    public byte playOrder;
 
-    //当前倒计时
-    public LocalDateTime turnDeadline;
+    //当前出牌倒计时
+    public LocalDateTime playDeadline;
 
     //游戏状态
     public Byte status;

@@ -15,9 +15,4 @@ public class GamerRuntime {
 
     //出牌顺序
     public byte order;
-
-    //执行出牌
-    public void play(List<Byte> playCards) {
-
-    }
 }
