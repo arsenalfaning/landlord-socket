@@ -16,19 +16,44 @@ public class RoomService {
     private static final Map<String, RoomInterface> ROOM_INFO_MAP = new ConcurrentSkipListMap<>();
 
     /**
+     * 玩家房间map
+     * key: 玩家id
+     */
+    private static final Map<String, RoomInterface> GAMER_ROOM_MAP = new ConcurrentSkipListMap<>();
+
+    /**
      * 玩家加入房间
      * @param roomId
      * @param gamerId
      * @return
      */
-    public String addGamer(String roomId, String gamerId) {
+    public Boolean addGamer(String roomId, String gamerId) {
         RoomInterface room = ROOM_INFO_MAP.get(roomId);
         if (room == null) {
             //TODO 未来这些信息要从管理服务获取'
             room = new LandlordRoom();
-            ROOM_INFO_MAP.put(roomId, room);
 //            return "无此房间";
+            ROOM_INFO_MAP.put(roomId, room);
         }
-        return room.addGamer(gamerId);
+        if ( room.addGamer(gamerId) ) {
+            GAMER_ROOM_MAP.put(gamerId, room);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 玩家准备
+     * @param gamerId
+     * @return
+     */
+    public boolean gamerReady(String gamerId) {
+        RoomInterface room = GAMER_ROOM_MAP.get(gamerId);
+        if (room != null) {
+            if (room.hasGamer(gamerId)) {
+                return room.getGamePlay().ready(gamerId);
+            }
+        }
+        return false;
     }
 }

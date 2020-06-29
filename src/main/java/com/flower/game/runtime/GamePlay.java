@@ -12,49 +12,49 @@ public interface GamePlay {
      * @param gamerId
      * @return
      */
-    GameRuntime join(String gamerId);
+    boolean join(String gamerId);
 
     /**
      * 做好准备
      * @return
      */
-    GameRuntime ready();
+    boolean ready(String gamerId);
 
     /**
      * 取消准备
      * @return
      */
-    GameRuntime unReady();
+    boolean unReady(String gamerId);
 
     /**
      * 洗牌
      */
-    GameRuntime shuffle();
+    boolean shuffle();
 
     /**
      * 切牌
      */
-    GameRuntime cut();
+    boolean cut();
 
     /**
      * 发牌
      */
-    GameRuntime deal();
+    boolean deal();
 
     /**
      * 理牌
      * @return
      */
-    GameRuntime sort();
+    boolean sort();
 
     /**
      * 出牌
      */
-    GameRuntime play(PlayData playData);
+    boolean play(PlayData playData);
 
     /**
      * 结束
      * @return
      */
-    GameRuntime complete();
+    boolean complete();
 }

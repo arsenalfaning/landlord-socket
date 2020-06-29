@@ -6,17 +6,17 @@
     <script type="application/javascript">
         var ws;
         function sendInfo(t) {
-            ws.send(t);
+            ws.send(JSON.stringify(t));
         }
         function connect() {
             ws = new WebSocket("ws://localhost:8080/hello?token=" + document.getElementById("token").value);
             ws.onopen = function(){
                 //当WebSocket创建成功时，触发onopen事件
                 console.log("open");
-                ws.send(JSON.stringify({
+                sendInfo({
                     'cmd': 'room',
                     'data': {room: document.getElementById("room").value},
-                })); //将消息发送到服务端
+                });
             }
             ws.onmessage = function(e){
                 //当客户端收到服务端发来的消息时，触发onmessage事件，参数e.data包含server传递过来的数据
@@ -31,12 +31,18 @@
                 console.log(e);
             }
         }
+        function ready() {
+            sendInfo({
+                'cmd': 'ready'
+            });
+        }
     </script>
 </head>
 <body>
     <input type="text" id="token" placeholder="输入用户token">
     <input type="text" id="room" placeholder="输入房间号">
-    <button onclick="connect()">连接</button>
+    <button onclick="connect()">连接并进入房间</button>
+    <button onclick="ready()">准备</button>
     <button onclick="sendInfo(new Date().getTime())">发送</button>
 </body>
 </html>

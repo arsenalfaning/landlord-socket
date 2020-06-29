@@ -1,10 +1,9 @@
 package com.flower.game.handler;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.flower.game.landlord.cmd.RoomCmd;
-import com.flower.game.landlord.parameter.RoomParameter;
-import com.flower.game.socket.*;
+import com.flower.game.landlord.cmd.CmdHolder;
+import com.flower.game.socket.SocketRegister;
+import com.flower.game.socket.SocketSender;
+import com.flower.game.socket.SocketUtil;
 import org.springframework.stereotype.Component;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
@@ -19,14 +18,12 @@ import reactor.core.publisher.Mono;
 public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
 
 //    private final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(2);
-    private final ObjectMapper objectMapper;
     private final SocketRegister socketRegister;
-    private final RoomCmd roomCmd;
+    private final CmdHolder cmdHolder;
 
-    public GameHandler(ObjectMapper objectMapper, SocketRegister socketRegister, RoomCmd roomCmd) {
-        this.objectMapper = objectMapper;
+    public GameHandler(SocketRegister socketRegister, CmdHolder cmdHolder) {
         this.socketRegister = socketRegister;
-        this.roomCmd = roomCmd;
+        this.cmdHolder = cmdHolder;
     }
 
     private void log(Object object) {
@@ -60,15 +57,7 @@ public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
         }).concatMap(message -> {
             log("concatMap");
             if (message.getType() ==  WebSocketMessage.Type.TEXT) {
-                String text = message.getPayloadAsText();
-                ThinSocketIn socketIn = readTextMessage(text);
-                if (socketIn != null) {
-                    if (SocketConst.CMD_ROOM.equals(socketIn.getCmd())) {
-                        SocketIn<RoomParameter> roomIn = readObjectMessage(text, RoomParameter.class);
-                        SocketOut<String> so = roomCmd.execute(roomIn, gamerId);
-                        return Mono.just( webSocketSession.textMessage(writeValue(so)) );
-                    }
-                }
+                return Mono.just( webSocketSession.textMessage(cmdHolder.execute(message.getPayloadAsText(), gamerId)) );
             }
             return Mono.just(webSocketSession.textMessage("error"));
         });
@@ -77,7 +66,6 @@ public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
             SocketSender socketSender = new SocketSender(webSocketSession, sink);
             socketRegister.register(gamerId, socketSender);
         }));
-
         return Mono.zip(webSocketSession.send(common), output).then();
     }
 
@@ -88,30 +76,4 @@ public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
         return configuration;
     }
 
-    public ThinSocketIn readTextMessage(String text) {
-        try {
-            return objectMapper.readValue(text, ThinSocketIn.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public <T> SocketIn<T> readObjectMessage(String text, Class<T> clazz) {
-        try {
-            return objectMapper.readValue(text, objectMapper.getTypeFactory().constructParametricType(SocketIn.class, clazz));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    public String writeValue(Object obj) {
-        try {
-            return objectMapper.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
 }

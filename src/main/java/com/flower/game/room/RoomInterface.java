@@ -1,7 +1,10 @@
 package com.flower.game.room;
 
+import com.flower.game.landlord.cmd.CmdHolder;
+import com.flower.game.runtime.GamePlay;
 import com.flower.game.socket.SocketRegister;
 import com.flower.game.util.SpringContextHolder;
+import org.springframework.util.StringUtils;
 
 import java.util.Collection;
 
@@ -12,7 +15,14 @@ public interface RoomInterface {
      * @param gamerId
      * @return
      */
-    String addGamer(String gamerId);
+    boolean addGamer(String gamerId);
+
+    /**
+     * 删除玩家
+     * @param gamerId
+     * @return
+     */
+    boolean removeGamer(String gamerId);
 
     /**
      * 查询玩家是否在该房间
@@ -28,11 +38,35 @@ public interface RoomInterface {
     Collection<String> allGamers();
 
     /**
-     * 广播推送
-     * @param text
+     * 获取gameplay
+     * @return
      */
-    default void broadcast(String text) {
+    GamePlay getGamePlay();
+
+    /**
+     * 广播推送
+     * @param object
+     */
+    default void broadcast(Object object) {
         SocketRegister socketRegister = SpringContextHolder.getBean(SocketRegister.class);
-        socketRegister.broadcast(allGamers(), text);
+        CmdHolder cmdHolder = SpringContextHolder.getBean(CmdHolder.class);
+        String value = cmdHolder.writeValue(object);
+        if (!StringUtils.isEmpty(value)) {
+            socketRegister.broadcast(allGamers(), value);
+        }
+    }
+
+    /**
+     * 单个推送
+     * @param object
+     * @param gamerId
+     */
+    default void messageTo(String gamerId, Object object) {
+        SocketRegister socketRegister = SpringContextHolder.getBean(SocketRegister.class);
+        CmdHolder cmdHolder = SpringContextHolder.getBean(CmdHolder.class);
+        String value = cmdHolder.writeValue(object);
+        if (!StringUtils.isEmpty(value)) {
+            socketRegister.messageTo(gamerId, value);
+        }
     }
 }

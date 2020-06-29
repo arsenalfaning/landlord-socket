@@ -10,6 +10,9 @@ public class GamerRuntime {
     //玩家唯一标识
     public String gamerId;
 
+    //是否做好准备
+    public Boolean ready;
+
     //出牌顺序
     public byte order;
 
