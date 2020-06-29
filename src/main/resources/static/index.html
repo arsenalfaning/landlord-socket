@@ -15,7 +15,7 @@
                 console.log("open");
                 ws.send(JSON.stringify({
                     'cmd': 'room',
-                    'data': {room: 1},
+                    'data': {room: document.getElementById("room").value},
                 })); //将消息发送到服务端
             }
             ws.onmessage = function(e){
@@ -34,7 +34,8 @@
     </script>
 </head>
 <body>
-    <input type="text" id="token">
+    <input type="text" id="token" placeholder="输入用户token">
+    <input type="text" id="room" placeholder="输入房间号">
     <button onclick="connect()">连接</button>
     <button onclick="sendInfo(new Date().getTime())">发送</button>
 </body>

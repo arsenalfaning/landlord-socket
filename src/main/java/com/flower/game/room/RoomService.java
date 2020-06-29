@@ -24,8 +24,9 @@ public class RoomService {
     public String addGamer(String roomId, String gamerId) {
         RoomInterface room = ROOM_INFO_MAP.get(roomId);
         if (room == null) {
-            //TODO 未来这些信息要从管理服务获取
-            ROOM_INFO_MAP.put(roomId, new LandlordRoom());
+            //TODO 未来这些信息要从管理服务获取'
+            room = new LandlordRoom();
+            ROOM_INFO_MAP.put(roomId, room);
 //            return "无此房间";
         }
         return room.addGamer(gamerId);

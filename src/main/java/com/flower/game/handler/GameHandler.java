@@ -61,7 +61,7 @@ public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
             log("concatMap");
             if (message.getType() ==  WebSocketMessage.Type.TEXT) {
                 String text = message.getPayloadAsText();
-                SocketIn socketIn = readTextMessage(text);
+                ThinSocketIn socketIn = readTextMessage(text);
                 if (socketIn != null) {
                     if (SocketConst.CMD_ROOM.equals(socketIn.getCmd())) {
                         SocketIn<RoomParameter> roomIn = readObjectMessage(text, RoomParameter.class);
@@ -88,9 +88,9 @@ public class GameHandler implements WebSocketHandler, CorsConfigurationSource {
         return configuration;
     }
 
-    public SocketIn readTextMessage(String text) {
+    public ThinSocketIn readTextMessage(String text) {
         try {
-            return objectMapper.readValue(text, SocketIn.class);
+            return objectMapper.readValue(text, ThinSocketIn.class);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
             return null;
