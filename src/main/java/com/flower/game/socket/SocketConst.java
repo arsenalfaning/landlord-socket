@@ -9,6 +9,7 @@ public class SocketConst {
     public static final String CMD_SUGGEST = "suggest";//提示牌
     public static final String CMD_LEAVE = "leave";//离开房间
     public static final String CMD_UPDATE = "update";//不支持客户端主动，仅作为服务端推送用
+    public static final String CMD_OVER = "over";//游戏结果，不支持客户端主动
 
     public static final String CODE_OK = "ok";//成功
     public static final String CODE_FAIL = "fail";//操作失败（一般错误，比如非法操作之类的）

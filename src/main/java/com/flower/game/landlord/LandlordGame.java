@@ -2,6 +2,7 @@ package com.flower.game.landlord;
 
 import com.flower.game.landlord.util.OutUtil;
 import com.flower.game.landlord.vo.GamerPlay;
+import com.flower.game.landlord.vo.GamerResultVo;
 import com.flower.game.room.RoomInterface;
 import com.flower.game.runtime.GamePlay;
 import com.flower.game.runtime.GameRuntime;
@@ -9,6 +10,7 @@ import com.flower.game.runtime.GameUtil;
 import com.flower.game.runtime.GamerRuntime;
 import com.flower.game.socket.SocketConst;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -31,14 +33,18 @@ public class LandlordGame implements GamePlay {
 
     public LandlordGame(RoomInterface room) {
         this.room = room;
+        gameRuntime.gamerRuntimeList = new ArrayList<>(3);
         this.init();
     }
 
     @Override
     public void init() {
         gameRuntime.dataMap = new HashMap<>();
-        gameRuntime.gamerRuntimeList = new ArrayList<>(3);
         gameRuntime.status = GameUtil.Game_Status_Init;
+        gameRuntime.gamerRuntimeList.stream().forEach(e -> {
+            e.cards = null;
+            e.ready = false;
+        });
     }
 
     @Override
@@ -182,12 +188,31 @@ public class LandlordGame implements GamePlay {
             Collections.sort(myself.cards, new LandlordSortComparator());
             this.turn();
             pushForPlay(SocketConst.CMD_UPDATE, newPlay);
+            if (myself.cards.isEmpty()) {
+                this.complete();
+            }
         }
         return flag;
     }
 
     @Override
     public boolean complete() {
+        //1.找到获胜方并创建结果
+        List<GamerResultVo> resultVos = gameRuntime.gamerRuntimeList.stream().map(e -> {
+            GamerResultVo vo = new GamerResultVo();
+            vo.setWin(e.cards.isEmpty());
+            if (vo.getWin()) {
+                vo.setDelta(BigDecimal.TEN);
+            } else {
+                vo.setDelta(BigDecimal.TEN.multiply(BigDecimal.valueOf(-1)));
+            }
+            vo.setGamerId(e.gamerId);
+            vo.setOrder(e.order);
+            return vo;
+        }).collect(Collectors.toList());
+        pushResult(resultVos);
+        //2.重置
+        this.init();
         return true;
     }
 
@@ -214,6 +239,11 @@ public class LandlordGame implements GamePlay {
         return gameRuntime.gamerRuntimeList.stream().filter(e -> e.gamerId.equals(gamerId)).collect(Collectors.toList()).get(0);
     }
 
+    private void pushResult(List<GamerResultVo> resultVos) {
+        gameRuntime.gamerRuntimeList.stream().forEach(e -> {
+            room.messageTo(e.gamerId, OutUtil.toResultVo(resultVos, e.gamerId, SocketConst.CMD_OVER));
+        });
+    }
     private void push(String cmd) {
         gameRuntime.gamerRuntimeList.stream().forEach(e -> {
             room.messageTo(e.gamerId, OutUtil.toGameVo(gameRuntime, e.gamerId, cmd));

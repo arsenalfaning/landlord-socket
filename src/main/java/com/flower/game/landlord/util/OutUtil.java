@@ -1,10 +1,7 @@
 package com.flower.game.landlord.util;
 
 import com.flower.game.landlord.LandlordGame;
-import com.flower.game.landlord.vo.GameVo;
-import com.flower.game.landlord.vo.GamerPlay;
-import com.flower.game.landlord.vo.GamerPlayVo;
-import com.flower.game.landlord.vo.GamerVo;
+import com.flower.game.landlord.vo.*;
 import com.flower.game.runtime.GameRuntime;
 import com.flower.game.runtime.GameUtil;
 import com.flower.game.runtime.GamerRuntime;
@@ -76,22 +73,25 @@ public class OutUtil {
         vo.setAppendSize(gamerPlay.getLandlordCards().getAppendSize());
         vo.setAppendDouble(gamerPlay.getLandlordCards().isAppendDouble());
         so.getData().setPlaying(vo);
-//        GamerRuntime gr = gameRuntime.gamerRuntimeList.get(gamerPlay.getPlayOrder());
-//        byte myOrder = gamerOrder(gameRuntime, gamerId);
-//        final GameVo gameVo = new GameVo();
-//        GamerPlayVo vo = new GamerPlayVo();
-//        vo.setGamer(encodePlayingGamer(myOrder, gamerPlay.getPlayOrder()));
-//        vo.setCards(gamerPlay.getCards());
-//        gameVo.setPlaying(vo);
-//        GamerVo gv = toGamerVo(gr, gameRuntime);
-//        if (myOrder == gr.order) {
-//            gameVo.setMyself(gv);
-//        } else if (prevOrder(myOrder) == gr.order) {
-//            gameVo.setPrev(gv);
-//        } else if (nextOrder(myOrder) < gr.order) {
-//            gameVo.setNext(gv);
-//        }
         return so;
+    }
+
+
+    public static SocketOut<ResultVo> toResultVo(List<GamerResultVo> vos, String gamerId, String cmd) {
+        final ResultVo vo = new ResultVo();
+        vos.stream().forEach( e -> {
+            if (e.getGamerId().equals(gamerId)) {
+                vo.setMyself(e);
+            }
+        });
+        vos.stream().forEach( e -> {
+          if (e.getOrder() == prevOrder(vo.getMyself().getOrder())) {
+              vo.setPrev(e);
+          } else if (e.getOrder() == nextOrder(vo.getMyself().getOrder())) {
+              vo.setNext(e);
+          }
+        });
+        return SocketOut.ok(vo, cmd);
     }
 
     private static byte gamerOrder(GameRuntime gameRuntime, String gamerId) {

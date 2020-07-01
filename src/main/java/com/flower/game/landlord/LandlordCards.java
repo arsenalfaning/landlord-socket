@@ -45,8 +45,17 @@ public class LandlordCards implements Comparable<LandlordCards> {
         if (type.equals(LandlordConst.Cards_Type_Joker_Bomb)) {
             return 1;
         }
+        if (another.type.equals(LandlordConst.Cards_Type_Joker_Bomb)) {
+            return -1;
+        }
+        if (type.equals(LandlordConst.Cards_Type_Bomb) && !another.type.equals(LandlordConst.Cards_Type_Bomb)) {
+            return 1;
+        }
+        if (!type.equals(LandlordConst.Cards_Type_Bomb) && another.type.equals(LandlordConst.Cards_Type_Bomb)) {
+            return -1;
+        }
         if (type.equals(another.type) && main.size() == another.main.size() && intEqualNullable(append, another.append)) { //如果牌类型相同
-            return - main.get(0).compareTo(another.main.get(0));
+            return -main.get(0).compareTo(another.main.get(0));
         }
         return 0;
     }
