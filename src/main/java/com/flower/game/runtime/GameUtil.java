@@ -12,6 +12,22 @@ public class GameUtil {
     public static final Byte Style_Club = 4; //梅花
     public static final Byte Style_Joker = 5; //大小猫🐱
 
+    public static final Byte Value_1 = 1;
+    public static final Byte Value_2 = 2;
+    public static final Byte Value_3 = 3;
+    public static final Byte Value_4 = 4;
+    public static final Byte Value_5 = 5;
+    public static final Byte Value_6 = 6;
+    public static final Byte Value_7 = 7;
+    public static final Byte Value_8 = 8;
+    public static final Byte Value_9 = 9;
+    public static final Byte Value_10 = 10;
+    public static final Byte Value_J = 11;
+    public static final Byte Value_Q = 12;
+    public static final Byte Value_K = 13;
+    public static final Byte Value_Joker_Kitten = 14;
+    public static final Byte Value_Joker_Cat = 15;
+
     public static final Byte Heart_1 = (byte) 0x11; //红桃1
     public static final Byte Heart_2 = (byte) 0x12; //红桃2
     public static final Byte Heart_3 = (byte) 0x13; //红桃3

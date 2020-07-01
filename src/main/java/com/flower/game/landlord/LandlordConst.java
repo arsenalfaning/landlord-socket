@@ -1,6 +1,7 @@
 package com.flower.game.landlord;
 
 /**
+ * <pre>
  * 出牌规则：
  * 1、单张，随便出，大小直接比较 1
  * 2、两张必须为对  2
@@ -11,13 +12,14 @@ package com.flower.game.landlord;
  * 7、飞机的副牌个数必须相同 6~21
  * 8、炸弹可以比大小 4
  * 9、王炸最大 2
+ * </pre>
  */
 public class LandlordConst {
 
     public static final byte Cards_Type_One = 1; //单张牌
     public static final byte Cards_Type_Two = 2; //对
     public static final byte Cards_Type_Three = 3; //三张
-    public static final byte Cards_Type_Four = 4; //四张
+    public static final byte Cards_Type_Four = 4; //四带一
     public static final byte Cards_Type_Seq = 5; //顺子
     public static final byte Cards_Type_Two_Seq = 6; //连对
     public static final byte Cards_Type_Three_Seq = 7; //飞机

@@ -2,10 +2,7 @@ package com.flower.game.landlord;
 
 import com.flower.game.runtime.GameUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class LandlordUtil {
@@ -14,6 +11,231 @@ public class LandlordUtil {
         List<LandlordCard> cardList = cards.stream().map(e -> new LandlordCard(e)).collect(Collectors.toList());
         Collections.sort(cardList);
         return cardList;
+    }
+
+    /**
+     * 提示出牌
+     * @param cardList 出牌者手中所有牌
+     * @param lastCards 上一手牌
+     * @return 返回null表明
+     */
+    public static LandlordCards suggestCards(List<LandlordCard> cardList, LandlordCards lastCards) {
+        if (lastCards != null) {
+            switch (lastCards.getType()) {
+                case LandlordConst.Cards_Type_Joker_Bomb:
+                    return null;
+                case LandlordConst.Cards_Type_Bomb:
+                    List<LandlordCard> bomb = findNValueEqual(cardList, lastCards.getMainSize(), lastCards.getMainFirstCard());
+                    if (bomb != null) {
+                        return constructCards(LandlordConst.Cards_Type_Bomb, bomb, null);
+                    }
+                    //尝试找王炸
+                    return suggestJokerBomb(cardList);
+                case LandlordConst.Cards_Type_One:
+                case LandlordConst.Cards_Type_Two:
+                case LandlordConst.Cards_Type_Three:
+                case LandlordConst.Cards_Type_Four:
+                    List<LandlordCard> one = findNValueEqual(cardList, lastCards.getMainSize(), lastCards.getMainFirstCard());
+                    if (one != null) {
+                        List<LandlordCard> append = null;
+                        if ( lastCards.getAppendSize() > 0 ) {
+                            List<LandlordCard> some = new ArrayList<>(cardList);
+                            some.removeAll(one);
+                            if ( lastCards.isAppendDouble() ) {
+                                append = suggestNTwo(some, lastCards.getAppendSize() / 2);
+                            } else {
+                                append = suggestNOne(some, lastCards.getAppendSize());
+                            }
+                        }
+                        return constructCards(lastCards.getType(), one, append);
+                    }
+                    //尝试找炸弹
+                    return suggestBombOrJokerBomb(cardList);
+                case LandlordConst.Cards_Type_Seq:
+                    List<LandlordCard> seq = suggestSeq(cardList, lastCards.getMainFirstCard(), lastCards.getMainSize(), 1);
+                    if (seq != null) {
+                        return constructCards(lastCards.getType(), seq, null);
+                    }
+                    return suggestBombOrJokerBomb(cardList);
+                case LandlordConst.Cards_Type_Two_Seq:
+                    List<LandlordCard> seq2 = suggestSeq(cardList, lastCards.getMainFirstCard(), lastCards.getMainSize() / 2, 2);
+                    if (seq2 != null) {
+                        return constructCards(lastCards.getType(), seq2, null);
+                    }
+                    return suggestBombOrJokerBomb(cardList);
+                case LandlordConst.Cards_Type_Three_Seq:
+                    List<LandlordCard> seq3 = suggestSeq(cardList, lastCards.getMainFirstCard(), lastCards.getMainSize() / 3, 3);
+                    if (seq3 != null) {
+                        List<LandlordCard> rest = new ArrayList<>(cardList);
+                        rest.removeAll(seq3);
+                        if ( lastCards.getAppendSize() > 0 ) {
+                            List<LandlordCard> append;
+                            if ( lastCards.isAppendDouble() ) {
+                                append = suggestNTwo(rest, lastCards.getMainSize() / 3);
+                            } else {
+                                append = suggestNOne(rest, lastCards.getMainSize() / 3);
+                            }
+                            if ( append != null ) {
+                                return constructCards(lastCards.getType(), seq3, append);
+                            }
+                        } else {
+                            return constructCards(lastCards.getType(), seq3, null);
+                        }
+
+                    }
+                    return suggestBombOrJokerBomb(cardList);
+            }
+        } else {
+            LandlordCards r = checkCards(cardList);
+            if (r == null) {
+                return suggestMin(cardList);
+            }
+            return r;
+        }
+        return null;
+    }
+
+    /**
+     * 建议发牌
+     * @param cardList
+     * @return
+     */
+    private static LandlordCards suggestMin(List<LandlordCard> cardList) {
+        int times = 0;
+        LandlordCard min = cardList.get(cardList.size() - 1);
+        for (int i = cardList.size() - 1; i >= 0; i --) {
+            if ( cardList.get(i).getValue().equals(min.getValue()) ) {
+                times ++;
+            } else {
+                break;
+            }
+        }
+        if (times == 1) {
+            return constructCards(LandlordConst.Cards_Type_One, Arrays.asList(min), null);
+        } else if (times == 2) {
+            return constructCards(LandlordConst.Cards_Type_Two, cardList.subList(cardList.size() - 2, cardList.size()), null);
+        } else if (times == 3) {
+            return constructCards(LandlordConst.Cards_Type_Three, cardList.subList(cardList.size() - 3, cardList.size()), null);
+        } else {
+            return constructCards(LandlordConst.Cards_Type_Bomb, cardList.subList(cardList.size() - 4, cardList.size()), null);
+        }
+    }
+
+    /**
+     * 查找顺子
+     * @param cardList
+     * @param maxCard
+     * @param length
+     * @param size 1表示单连，2表示连对，3表示飞机
+     * @return
+     */
+    private static List<LandlordCard> suggestSeq(List<LandlordCard> cardList, LandlordCard maxCard, int length, int size) {
+        if (cardList.size() < length * size) return null;
+        int max = LandlordSortComparator.nextSeqValue( LandlordSortComparator.convertValue(maxCard.getValue()) );
+        if (max == 0) return null;
+        List<Integer>[] indexArray = new List[41];
+        for (int i = 0; i < cardList.size(); i ++) {
+            LandlordCard card = cardList.get(i);
+            int v = LandlordSortComparator.convertValue(card.getValue());
+            List<Integer> indexList = indexArray[v];
+            if (indexList == null) {
+                indexList = new LinkedList<>();
+                indexArray[v] = indexList;
+            }
+            indexList.add(i);
+        }
+        while (max > 0) {
+            int existValue = max + 1;
+            boolean exist = true;
+            List<LandlordCard> result = new ArrayList<>(length * size);
+            for (int i = max; i >= max - length + 1; i --) {
+                if (indexArray[i] != null && indexArray[i].size() >= size) {
+                    existValue = i;
+                    for (int j = 0; j < size; j ++) {
+                        result.add(cardList.get(indexArray[i].get(j)));
+                    }
+                } else {
+                    exist = false;
+                    break;
+                }
+            }
+            if (exist) {
+                return result;
+            }
+            max = LandlordSortComparator.nextSeqValue(existValue + length - 2);
+        }
+        return null;
+    }
+
+    /**
+     * 查找N张对
+     * @param cardList
+     * @return
+     */
+    private static List<LandlordCard> suggestNTwo(List<LandlordCard> cardList, int n) {
+        if (cardList.size() >= 2 * n) {
+            List<Integer> indexList = new ArrayList<>(2 * n);
+            for (int i = cardList.size() - 1; i >= 1; i --) {
+                if (cardList.get(i).getValue().equals(cardList.get(i - 1).getValue())) {
+                    indexList.add(i);
+                    indexList.add(i - 1);
+                    i --;
+                    if (indexList.size() == 2 * n) break;
+                }
+            }
+            if (indexList.size() == 2 * n) {
+                List<LandlordCard> r = new ArrayList<>(2 * n);
+                for (int index : indexList) {
+                    r.add(cardList.get(index));
+                }
+                return r;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 查找N张单
+     * @param cardList
+     * @return
+     */
+    private static List<LandlordCard> suggestNOne(List<LandlordCard> cardList, int n) {
+        if (cardList.size() >= n) {
+            return new ArrayList<>(cardList.subList(cardList.size() - n, cardList.size()));
+        }
+        return null;
+    }
+
+    /**
+     * 查找炸弹或者王炸
+     * @param cardList
+     * @return
+     */
+    private static LandlordCards suggestBombOrJokerBomb(List<LandlordCard> cardList) {
+        List<LandlordCard> bomb = findNValueEqualFromRight(cardList, 4);
+        if (bomb != null) {
+            return constructCards(LandlordConst.Cards_Type_Bomb, bomb, null);
+        }
+        return suggestJokerBomb(cardList);
+    }
+
+    /**
+     * 查找王炸
+     * @param cardList
+     * @return
+     */
+    private static LandlordCards suggestJokerBomb(List<LandlordCard> cardList) {
+        if (cardList.size() >= 2) {
+            List<LandlordCard> some = cardList.subList(0, 2);
+            if (isJokerBomb(some)) {
+                return constructCards(LandlordConst.Cards_Type_Joker_Bomb, some, null);
+            }
+        }
+        return null;
+    }
+
+    private static boolean isJokerBomb(List<LandlordCard> cardList) {
+        return cardList.stream().allMatch(e -> e.getStyle().equals(GameUtil.Style_Joker));
     }
 
     /**
@@ -27,7 +249,7 @@ public class LandlordUtil {
         } else if (cardList.size() == 2) { //王炸或者对
             if (isAllValueEqual(cardList)) { //是对
                 return constructCards(LandlordConst.Cards_Type_Two, cardList, null);
-            } else if ( cardList.stream().allMatch(e -> e.getStyle().equals(GameUtil.Style_Joker)) ){ //是王炸
+            } else if ( isJokerBomb(cardList) ){ //是王炸
                 return constructCards(LandlordConst.Cards_Type_Joker_Bomb, cardList, null);
             }
         } else if (cardList.size() == 3) { //三张
@@ -40,6 +262,9 @@ public class LandlordUtil {
             }
         } else if (cardList.size() == 5) { //五张
             LandlordCards c = checkFour(cardList);
+            if (c == null) {
+                c = checkThree(cardList);
+            }
             if (c == null) {
                 c = checkSeq(cardList);
             }
@@ -228,6 +453,40 @@ public class LandlordUtil {
         for (int i = 0; i <= copy.size() - n; i ++) {
             if ( copy.get(i).getValue().equals( copy.get(i + n - 1).getValue() ) ) {
                 return new ArrayList<>(cardList.subList(i, i + n));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 查找N张value相同的牌，要求比给定的牌大
+     * @param cardList
+     * @param n
+     * @return
+     */
+    private static List<LandlordCard> findNValueEqual(List<LandlordCard> cardList, int n, LandlordCard targetCard) {
+        List<LandlordCard> copy = new ArrayList<>(cardList);
+        int targetValue = LandlordSortComparator.convertValue(targetCard.getValue());
+        for (int i = copy.size() - 1; i >= n - 1; i --) {
+            if (LandlordSortComparator.convertValue(copy.get(i).getValue()) > targetValue &&  copy.get(i).getValue().equals( copy.get(i - n + 1).getValue() ) ) {
+                return new ArrayList<>(cardList.subList(i - n + 1, i + 1));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 查找N张value相同的牌，从小到大找
+     * @param cardList
+     * @param n
+     * @return
+     */
+    private static List<LandlordCard> findNValueEqualFromRight(List<LandlordCard> cardList, int n) {
+        if (n <= 0) return new ArrayList<>();
+        List<LandlordCard> copy = new ArrayList<>(cardList);
+        for (int i = copy.size() - 1; i >= n - 1; i --) {
+            if (copy.get(i).getValue().equals( copy.get(i - n + 1).getValue() ) ) {
+                return new ArrayList<>(cardList.subList(i - n + 1, i + 1));
             }
         }
         return null;
