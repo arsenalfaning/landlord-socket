@@ -17,12 +17,14 @@ public class CmdHolder{
     private final RoomCmd roomCmd;
     private final ReadyCmd readyCmd;
     private final PlayCmd playCmd;
+    private final SuggestCmd suggestCmd;
 
-    public CmdHolder(ObjectMapper objectMapper, RoomCmd roomCmd, ReadyCmd readyCmd, PlayCmd playCmd) {
+    public CmdHolder(ObjectMapper objectMapper, RoomCmd roomCmd, ReadyCmd readyCmd, PlayCmd playCmd, SuggestCmd suggestCmd) {
         this.objectMapper = objectMapper;
         this.roomCmd = roomCmd;
         this.readyCmd = readyCmd;
         this.playCmd = playCmd;
+        this.suggestCmd = suggestCmd;
     }
 
     public String execute(String text, String gamerId) {
@@ -38,6 +40,8 @@ public class CmdHolder{
                     return writeValue(readyOut);
                 case SocketConst.CMD_PLAY:
                     return writeValue(playCmd.execute(readObjectMessage(text, PlayParameter.class), gamerId));
+                case SocketConst.CMD_SUGGEST:
+                    return writeValue(suggestCmd.execute(readObjectMessage(text, Void.class), gamerId));
 
             }
         }

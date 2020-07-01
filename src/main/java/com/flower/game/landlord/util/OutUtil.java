@@ -49,7 +49,9 @@ public class OutUtil {
                 vo.setGamer(encodePlayingGamer(finalMyOrder, e.getPlayOrder()));
                 vo.setCards(e.getCards());
                 vo.setType(e.getLandlordCards().getType());
-//                vo.setMain(e.getLandlordCards().getMainSize());
+                vo.setMainSize(e.getLandlordCards().getMainSize());
+                vo.setAppendSize(e.getLandlordCards().getAppendSize());
+                vo.setAppendDouble(e.getLandlordCards().isAppendDouble());
                 return vo;
             }).collect(Collectors.toList()));
         }
@@ -70,6 +72,9 @@ public class OutUtil {
         vo.setGamer(encodePlayingGamer(gamerOrder(gameRuntime, gamerId), gamerPlay.getPlayOrder()));
         vo.setCards(gamerPlay.getCards());
         vo.setType(gamerPlay.getLandlordCards().getType());
+        vo.setMainSize(gamerPlay.getLandlordCards().getMainSize());
+        vo.setAppendSize(gamerPlay.getLandlordCards().getAppendSize());
+        vo.setAppendDouble(gamerPlay.getLandlordCards().isAppendDouble());
         so.getData().setPlaying(vo);
 //        GamerRuntime gr = gameRuntime.gamerRuntimeList.get(gamerPlay.getPlayOrder());
 //        byte myOrder = gamerOrder(gameRuntime, gamerId);

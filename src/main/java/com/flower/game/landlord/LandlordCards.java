@@ -1,7 +1,5 @@
 package com.flower.game.landlord;
 
-import lombok.AllArgsConstructor;
-
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,7 +7,6 @@ import java.util.List;
 /**
  * 一手牌
  */
-@AllArgsConstructor
 public class LandlordCards implements Comparable<LandlordCards> {
 
     /**
@@ -19,6 +16,23 @@ public class LandlordCards implements Comparable<LandlordCards> {
     private Byte type;
     private List<LandlordCard> main;//主牌
     private List<LandlordCard> append; //副牌
+    private boolean appendDouble;
+
+    public LandlordCards(Byte type, List<LandlordCard> main, List<LandlordCard> append) {
+        this.type = type;
+        this.main = main;
+        this.append = append;
+        int size = getAppendSize();
+        if (size >= 2 && size % 2 == 0) {
+            for (int i = 0; i < size - 1; i +=2) {
+                if (!append.get(i).getValue().equals(append.get(i + 1).getValue())) {
+                    return;
+                }
+            }
+            this.appendDouble = true;
+            return;
+        }
+    }
 
     /**
      * 返回0不一定表示一样大，也可能无法比较，比如单张5和一对3
@@ -65,16 +79,7 @@ public class LandlordCards implements Comparable<LandlordCards> {
      * @return
      */
     public boolean isAppendDouble() {
-        int size = getAppendSize();
-        if (size >= 2 && size % 2 == 0) {
-            for (int i = 0; i < size - 1; i +=2) {
-                if (!append.get(i).getValue().equals(append.get(i + 1).getValue())) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        return false;
+        return appendDouble;
     }
 
     public List<Byte> toCards() {

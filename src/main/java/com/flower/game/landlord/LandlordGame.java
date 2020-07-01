@@ -12,6 +12,7 @@ import com.flower.game.socket.SocketConst;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class LandlordGame implements GamePlay {
 
@@ -188,6 +189,29 @@ public class LandlordGame implements GamePlay {
     @Override
     public boolean complete() {
         return true;
+    }
+
+    /**
+     * 建议出牌
+     * @return
+     */
+    public List<Byte> suggest(String gamerId) {
+        List<GamerPlay> gamerPlays = playHistory(gameRuntime);
+        GamerRuntime myself = getGamerByGamerId(gamerId);
+        LandlordCards result = null;
+        if (gamerPlays != null && !gamerPlays.isEmpty()) {
+            result = LandlordUtil.suggestCards( LandlordUtil.convertCards(myself.cards), gamerPlays.get(gamerPlays.size() - 1).getLandlordCards());
+        } else {
+            result = LandlordUtil.suggestCards( LandlordUtil.convertCards(myself.cards), null);
+        }
+        if (result != null) {
+            return result.toCards();
+        }
+        return null;
+    }
+
+    private GamerRuntime getGamerByGamerId(String gamerId) {
+        return gameRuntime.gamerRuntimeList.stream().filter(e -> e.gamerId.equals(gamerId)).collect(Collectors.toList()).get(0);
     }
 
     private void push(String cmd) {

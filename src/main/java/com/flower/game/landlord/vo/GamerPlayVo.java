@@ -11,4 +11,5 @@ public class GamerPlayVo {
     private Byte type;
     private int mainSize;
     private int appendSize;
+    private Boolean appendDouble;
 }
