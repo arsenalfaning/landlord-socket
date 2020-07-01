@@ -2,8 +2,10 @@ package com.flower.game.landlord.cmd;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flower.game.landlord.parameter.ApproveParameter;
 import com.flower.game.landlord.parameter.PlayParameter;
 import com.flower.game.landlord.parameter.RoomParameter;
+import com.flower.game.landlord.util.MyGameConst;
 import com.flower.game.socket.SocketConst;
 import com.flower.game.socket.SocketIn;
 import com.flower.game.socket.SocketOut;
@@ -18,13 +20,15 @@ public class CmdHolder{
     private final ReadyCmd readyCmd;
     private final PlayCmd playCmd;
     private final SuggestCmd suggestCmd;
+    private final ApproveCmd approveCmd;
 
-    public CmdHolder(ObjectMapper objectMapper, RoomCmd roomCmd, ReadyCmd readyCmd, PlayCmd playCmd, SuggestCmd suggestCmd) {
+    public CmdHolder(ObjectMapper objectMapper, RoomCmd roomCmd, ReadyCmd readyCmd, PlayCmd playCmd, SuggestCmd suggestCmd, ApproveCmd approveCmd) {
         this.objectMapper = objectMapper;
         this.roomCmd = roomCmd;
         this.readyCmd = readyCmd;
         this.playCmd = playCmd;
         this.suggestCmd = suggestCmd;
+        this.approveCmd = approveCmd;
     }
 
     public String execute(String text, String gamerId) {
@@ -42,6 +46,8 @@ public class CmdHolder{
                     return writeValue(playCmd.execute(readObjectMessage(text, PlayParameter.class), gamerId));
                 case SocketConst.CMD_SUGGEST:
                     return writeValue(suggestCmd.execute(readObjectMessage(text, Void.class), gamerId));
+                case MyGameConst.CMD_APPROVE:
+                    return writeValue(approveCmd.execute(readObjectMessage(text, ApproveParameter.class), gamerId));
 
             }
         }

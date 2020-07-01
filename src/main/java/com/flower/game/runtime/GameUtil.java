@@ -114,6 +114,7 @@ public class GameUtil {
     }
 
     public static final Byte Game_Status_Init = 0; //初始状态
-    public static final Byte Game_Status_Playing = 10; //进行中
+    public static final Byte Game_Status_Before_Playing = 20; //打牌之前的状态，比如抢地主、是否加倍等
+    public static final Byte Game_Status_Playing = 50; //进行中
     public static final Byte Game_Status_Over = 127; //结束
 }

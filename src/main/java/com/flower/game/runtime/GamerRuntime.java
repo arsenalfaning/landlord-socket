@@ -1,6 +1,7 @@
 package com.flower.game.runtime;
 
 import java.util.List;
+import java.util.Map;
 
 public class GamerRuntime {
 
@@ -15,4 +16,7 @@ public class GamerRuntime {
 
     //出牌顺序
     public byte order;
+//
+//    //玩家其他属性
+//    public Map<String, Object> data;
 }

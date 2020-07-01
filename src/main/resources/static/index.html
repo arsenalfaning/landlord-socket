@@ -40,6 +40,14 @@
                 'cmd': 'ready'
             });
         }
+        function approve(value) {
+            sendInfo({
+                'cmd': 'approve',
+                'data': {
+                    value: value
+                }
+            });
+        }
         function play() {
             sendInfo({
                 'cmd': 'play',
@@ -60,7 +68,11 @@
     <input type="text" id="room" placeholder="输入房间号">
     <button onclick="connect()">连接并进入房间</button>
     <button onclick="ready()">准备</button>
-    <button onclick="play()">出牌</button>
+
+    <button onclick="approve(true)">抢地主</button>
+    <button onclick="approve(false)">不抢地主</button>
+
     <button onclick="suggest()">建议</button>
+    <button onclick="play()">出牌</button>
 </body>
 </html>

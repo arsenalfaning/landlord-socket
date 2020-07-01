@@ -52,6 +52,17 @@ public class OutUtil {
                 return vo;
             }).collect(Collectors.toList()));
         }
+        Map<Byte, GamerApprove> gamerApproveMap = LandlordGame.getApproveHistory(gameRuntime);
+        if (!gamerApproveMap.isEmpty()) {
+            gameVo.setApproveHistory(gamerApproveMap.values().stream().map(e -> {
+                GamerApproveVo vo = new GamerApproveVo();
+                vo.setGamer(encodePlayingGamer(gamerOrder(gameRuntime, gamerId), e.getPlayOrder()));
+                vo.setValue(e.isValue());
+                return vo;
+            }).collect(Collectors.toList()));
+
+        }
+        gameVo.setLandlordRest(LandlordGame.getLandlordRest(gameRuntime));
         return SocketOut.ok(gameVo, cmd);
     }
 
@@ -73,6 +84,23 @@ public class OutUtil {
         vo.setAppendSize(gamerPlay.getLandlordCards().getAppendSize());
         vo.setAppendDouble(gamerPlay.getLandlordCards().isAppendDouble());
         so.getData().setPlaying(vo);
+        return so;
+    }
+
+    /**
+     * 抢地主增量更新
+     * @param gameRuntime
+     * @param gamerId
+     * @param cmd
+     * @param gamerApprove
+     * @return
+     */
+    public static SocketOut<GameVo> toGameVoForApprove(GameRuntime gameRuntime, String gamerId, String cmd, GamerApprove gamerApprove) {
+        final SocketOut<GameVo> so = toGameVo(gameRuntime, gamerId, cmd);
+        GamerApproveVo vo = new GamerApproveVo();
+        vo.setGamer(encodePlayingGamer(gamerOrder(gameRuntime, gamerId), gamerApprove.getPlayOrder()));
+        vo.setValue(gamerApprove.isValue());
+        so.getData().setApprove(vo);
         return so;
     }
 

@@ -16,4 +16,7 @@ public class GameVo {
     private LocalDateTime playingDeadline;//出牌截止时间
     private GamerPlayVo playing;//当前出牌
     private List<GamerPlayVo> playHistory;//当回合出牌历史
+    private List<GamerApproveVo> approveHistory;//抢地主历史
+    private GamerApproveVo approve;//当前抢地主动作
+    private List<Byte> landlordRest;//地主余牌
 }
