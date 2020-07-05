@@ -34,22 +34,34 @@ public class LandlordUtil {
                 case LandlordConst.Cards_Type_One:
                 case LandlordConst.Cards_Type_Two:
                 case LandlordConst.Cards_Type_Three:
-                case LandlordConst.Cards_Type_Four:
+                case LandlordConst.Cards_Type_Three_Append_One:
+                case LandlordConst.Cards_Type_Four_Append_One:
+                case LandlordConst.Cards_Type_Four_Append_Two:
                     List<LandlordCard> one = findNValueEqual(cardList, lastCards.getMainSize(), lastCards.getMainFirstCard());
                     if (one != null) {
                         List<LandlordCard> append = null;
                         if ( lastCards.getAppendSize() > 0 ) {
                             List<LandlordCard> some = new ArrayList<>(cardList);
                             some.removeAll(one);
-                            if ( lastCards.isAppendDouble() ) {
-                                append = suggestNTwo(some, lastCards.getAppendSize() / 2);
-                            } else {
-                                append = suggestNOne(some, lastCards.getAppendSize());
-                            }
+                            append = suggestNOne(some, lastCards.getAppendSize());
                         }
                         return constructCards(lastCards.getType(), one, append);
                     }
                     //尝试找炸弹
+                    return suggestBombOrJokerBomb(cardList);
+                case LandlordConst.Cards_Type_Three_Append_Double:
+                case LandlordConst.Cards_Type_Four_Append_Double:
+                case LandlordConst.Cards_Type_Four_Append_Two_Double:
+                    List<LandlordCard> one1 = findNValueEqual(cardList, lastCards.getMainSize(), lastCards.getMainFirstCard());
+                    if (one1 != null) {
+                        List<LandlordCard> append = null;
+                        if ( lastCards.getAppendSize() > 0 ) {
+                            List<LandlordCard> some = new ArrayList<>(cardList);
+                            some.removeAll(one1);
+                            append = suggestNTwo(some, lastCards.getAppendSize() / 2);
+                        }
+                        return constructCards(lastCards.getType(), one1, append);
+                    }
                     return suggestBombOrJokerBomb(cardList);
                 case LandlordConst.Cards_Type_Seq:
                     List<LandlordCard> seq = suggestSeq(cardList, lastCards.getMainFirstCard(), lastCards.getMainSize(), 1);
@@ -64,13 +76,15 @@ public class LandlordUtil {
                     }
                     return suggestBombOrJokerBomb(cardList);
                 case LandlordConst.Cards_Type_Three_Seq:
+                case LandlordConst.Cards_Type_Three_Seq_Append_One:
+                case LandlordConst.Cards_Type_Three_Seq_Append_Double:
                     List<LandlordCard> seq3 = suggestSeq(cardList, lastCards.getMainFirstCard(), lastCards.getMainSize() / 3, 3);
                     if (seq3 != null) {
                         List<LandlordCard> rest = new ArrayList<>(cardList);
                         rest.removeAll(seq3);
                         if ( lastCards.getAppendSize() > 0 ) {
                             List<LandlordCard> append;
-                            if ( lastCards.isAppendDouble() ) {
+                            if ( lastCards.getType().equals(LandlordConst.Cards_Type_Three_Seq_Append_Double) ) {
                                 append = suggestNTwo(rest, lastCards.getMainSize() / 3);
                             } else {
                                 append = suggestNOne(rest, lastCards.getMainSize() / 3);
@@ -239,6 +253,20 @@ public class LandlordUtil {
     }
 
     /**
+     * 检查出牌是否满足特定类型
+     * @param cardList
+     * @param cards
+     * @return
+     */
+    public static LandlordCards checkCardsForType(List<LandlordCard> cardList, LandlordCards cards) {
+        LandlordCards r = suggestCards(cardList, cards);
+        if  (r != null && r.getMainSize() + r.getAppendSize() == cardList.size()) {
+            return r;
+        }
+        return null;
+    }
+
+    /**
      * 查看是否满足出牌规则，如果满足则返回正常结果，否则返回空
      * @param cardList 必须先排好序
      * @return
@@ -318,7 +346,12 @@ public class LandlordUtil {
             if (c1 != null) { //c1是主牌
                 cardList.removeAll(c1);
                 if (isAllValueEqual(cardList)) {
-                    return constructCards(LandlordConst.Cards_Type_Three, c1, cardList);
+                    if (cardList.size() == 1) {
+                        return constructCards(LandlordConst.Cards_Type_Three_Append_One, c1, cardList);
+                    } else {
+                        return constructCards(LandlordConst.Cards_Type_Three_Append_Double, c1, cardList);
+                    }
+
                 }
             }
         }
@@ -337,10 +370,18 @@ public class LandlordUtil {
             if (c1 != null && c1.size() == 4) { //c1是主牌
                 boolean b = cardList.removeAll(c1);
                 if (cardList.size() <= 2) {
-                    return constructCards(LandlordConst.Cards_Type_Four, c1, cardList);
+                    if (cardList.size() == 1) {
+                         return constructCards(LandlordConst.Cards_Type_Four_Append_One, c1, cardList);
+                    } else {
+                        if (isAllValueEqual(cardList)) {
+                            return constructCards(LandlordConst.Cards_Type_Four_Append_Double, c1, cardList);
+                        } else {
+                            return constructCards(LandlordConst.Cards_Type_Four_Append_Two, c1, cardList);
+                        }
+                    }
                 } else if (cardList.size() == 4) {
                     if (isAllValueEqual(cardList) || ( isAllValueEqual(cardList.subList(0, 2))  && isAllValueEqual(cardList.subList(2, 4)) )) {
-                        return constructCards(LandlordConst.Cards_Type_Four, c1, cardList);
+                        return constructCards(LandlordConst.Cards_Type_Four_Append_Two_Double, c1, cardList);
                     }
                 }
             }
@@ -415,8 +456,11 @@ public class LandlordUtil {
                         return null;
                     }
                 }
-                if (cardList.size() == list.size() || cardList.isEmpty()) {
+                if (cardList.isEmpty()) {
                     return constructCards(LandlordConst.Cards_Type_Three_Seq, main, cardList);
+                }
+                if (cardList.size() == list.size()) {
+                    return constructCards(LandlordConst.Cards_Type_Three_Seq_Append_One, main, cardList);
                 }
                 if (cardList.size() == list.size() * 2) {
                     for (int i = 0; i < cardList.size() - 1; i += 2) {
@@ -424,7 +468,7 @@ public class LandlordUtil {
                             return null;
                         }
                     }
-                    return constructCards(LandlordConst.Cards_Type_Three_Seq, main, cardList);
+                    return constructCards(LandlordConst.Cards_Type_Three_Seq_Append_Double, main, cardList);
                 }
             }
         }

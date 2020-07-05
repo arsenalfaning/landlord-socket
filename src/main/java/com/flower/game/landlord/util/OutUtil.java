@@ -46,9 +46,6 @@ public class OutUtil {
                 vo.setGamer(encodePlayingGamer(finalMyOrder, e.getPlayOrder()));
                 vo.setCards(e.getCards());
                 vo.setType(e.getLandlordCards().getType());
-                vo.setMainSize(e.getLandlordCards().getMainSize());
-                vo.setAppendSize(e.getLandlordCards().getAppendSize());
-                vo.setAppendDouble(e.getLandlordCards().isAppendDouble());
                 return vo;
             }).collect(Collectors.toList()));
         }
@@ -62,7 +59,9 @@ public class OutUtil {
             }).collect(Collectors.toList()));
 
         }
-        gameVo.setLandlordRest(LandlordGame.getLandlordRest(gameRuntime));
+        if (gameRuntime.status > GameUtil.Game_Status_Before_Playing) {
+            gameVo.setLandlordRest(LandlordGame.getLandlordRest(gameRuntime));
+        }
         return SocketOut.ok(gameVo, cmd);
     }
 
@@ -80,9 +79,6 @@ public class OutUtil {
         vo.setGamer(encodePlayingGamer(gamerOrder(gameRuntime, gamerId), gamerPlay.getPlayOrder()));
         vo.setCards(gamerPlay.getCards());
         vo.setType(gamerPlay.getLandlordCards().getType());
-        vo.setMainSize(gamerPlay.getLandlordCards().getMainSize());
-        vo.setAppendSize(gamerPlay.getLandlordCards().getAppendSize());
-        vo.setAppendDouble(gamerPlay.getLandlordCards().isAppendDouble());
         so.getData().setPlaying(vo);
         return so;
     }

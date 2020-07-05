@@ -16,22 +16,11 @@ public class LandlordCards implements Comparable<LandlordCards> {
     private Byte type;
     private List<LandlordCard> main;//主牌
     private List<LandlordCard> append; //副牌
-    private boolean appendDouble;
 
     public LandlordCards(Byte type, List<LandlordCard> main, List<LandlordCard> append) {
         this.type = type;
         this.main = main;
         this.append = append;
-        int size = getAppendSize();
-        if (size >= 2 && size % 2 == 0) {
-            for (int i = 0; i < size - 1; i +=2) {
-                if (!append.get(i).getValue().equals(append.get(i + 1).getValue())) {
-                    return;
-                }
-            }
-            this.appendDouble = true;
-            return;
-        }
     }
 
     /**
@@ -82,15 +71,6 @@ public class LandlordCards implements Comparable<LandlordCards> {
         if (this.append == null) return 0;
         return this.append.size();
     }
-
-    /**
-     * 检测副牌是否是对
-     * @return
-     */
-    public boolean isAppendDouble() {
-        return appendDouble;
-    }
-
     public List<Byte> toCards() {
         List<Byte> bytes = new LinkedList<>();
         main.stream().forEach(e -> bytes.add(e.getCard()));

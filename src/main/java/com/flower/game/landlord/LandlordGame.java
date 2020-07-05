@@ -107,6 +107,10 @@ public class LandlordGame implements GamePlay {
 
     @Override
     synchronized public boolean join(String gamerId) {
+        if ( gameRuntime.gamerRuntimeList.stream().anyMatch(e -> e.gamerId.equals(gamerId)) ) {
+            push(SocketConst.CMD_UPDATE);
+            return true;
+        }
         if (gameRuntime.gamerRuntimeList.size() < 3) {
             GamerRuntime gamerRuntime = new GamerRuntime();
             gamerRuntime.order = (byte) gameRuntime.gamerRuntimeList.size();
@@ -306,23 +310,19 @@ public class LandlordGame implements GamePlay {
         GamerPlay newPlay = null;
         if (myCardsSet.containsAll(someCardsSet) && someCardsSet.size() == cards.size()) {
             //2.检查出牌是否满足规则
-            LandlordCards landlordCards = LandlordUtil.checkCards(LandlordUtil.convertCards(cards));
+            List<GamerPlay> playHistory = playHistory(gameRuntime);
+            LandlordCards landlordCards = null;
+            if (playHistory.isEmpty()) {
+                landlordCards = LandlordUtil.checkCards(LandlordUtil.convertCards(cards));
+            } else {
+                landlordCards = LandlordUtil.checkCardsForType(LandlordUtil.convertCards(cards), playHistory.get(playHistory.size() - 1).getLandlordCards());
+            }
             if (landlordCards == null) { //不满足规则返回false
                 return false;
             }
             newPlay = new GamerPlay(gameRuntime.playOrder, landlordCards, cards);
-            List<GamerPlay> playHistory = playHistory(gameRuntime);
-            if (!playHistory.isEmpty()) {
-                GamerPlay gamerPlay = playHistory.get(playHistory.size() - 1);
-                //3.检查出的牌是否比上一手大
-                if (gamerPlay.getLandlordCards().compareTo(landlordCards) < 0) {
-                    playHistory.add(newPlay);
-                    flag = true;
-                }
-            } else {
-                playHistory.add(newPlay);
-                flag = true;
-            }
+            playHistory.add(newPlay);
+            flag = true;
         }
         if (flag) {//4.执行出牌
             myCardsSet.removeAll(someCardsSet);

@@ -19,10 +19,17 @@ public class LandlordConst {
     public static final byte Cards_Type_One = 1; //单张牌
     public static final byte Cards_Type_Two = 2; //对
     public static final byte Cards_Type_Three = 3; //三张
-    public static final byte Cards_Type_Four = 4; //四带一
+    public static final byte Cards_Type_Three_Append_One = 31; //三带一
+    public static final byte Cards_Type_Three_Append_Double = 32; //三带二
+    public static final byte Cards_Type_Four_Append_One = 41; //四带一
+    public static final byte Cards_Type_Four_Append_Two = 42; //四带二张单
+    public static final byte Cards_Type_Four_Append_Double = 43; //四带一对
+    public static final byte Cards_Type_Four_Append_Two_Double = 44; //四带两对
     public static final byte Cards_Type_Seq = 5; //顺子
     public static final byte Cards_Type_Two_Seq = 6; //连对
     public static final byte Cards_Type_Three_Seq = 7; //飞机
+    public static final byte Cards_Type_Three_Seq_Append_One = 71; //飞机带单张
+    public static final byte Cards_Type_Three_Seq_Append_Double = 72; //飞机带对
     public static final byte Cards_Type_Bomb = 8; //炸弹
     public static final byte Cards_Type_Joker_Bomb = 9; //王炸
 

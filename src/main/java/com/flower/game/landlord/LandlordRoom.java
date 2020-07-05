@@ -15,16 +15,11 @@ public class LandlordRoom implements RoomInterface {
 
     @Override
     public boolean addGamer(String gamerId) {
-        if (gamerIdSet.contains(gamerId)) {
-            return true;
-        }
-        if (gamerIdSet.size() >= 3) {
-            return false;
-        } else {
+        boolean r = gamePlay.join(gamerId);
+        if (r) {
             gamerIdSet.add(gamerId);
-            gamePlay.join(gamerId);
-            return true;
         }
+        return r;
     }
 
     @Override

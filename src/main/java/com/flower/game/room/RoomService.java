@@ -52,9 +52,7 @@ public class RoomService {
     public boolean gamerReady(String gamerId) {
         RoomInterface room = GAMER_ROOM_MAP.get(gamerId);
         if (room != null) {
-            if (room.hasGamer(gamerId)) {
-                return room.getGamePlay().ready(gamerId);
-            }
+            return room.getGamePlay().ready(gamerId);
         }
         return false;
     }
