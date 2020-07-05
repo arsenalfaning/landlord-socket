@@ -10,6 +10,11 @@ import java.util.List;
 public class LandlordCards implements Comparable<LandlordCards> {
 
     /**
+     * 要不起
+     */
+    public static final LandlordCards NO_CARDS = new LandlordCards((byte)0, null, null);
+
+    /**
      * 牌类型
      * @see LandlordConst
      */

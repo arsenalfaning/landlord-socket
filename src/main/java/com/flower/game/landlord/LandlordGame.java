@@ -79,6 +79,17 @@ public class LandlordGame implements GamePlay {
         }
         return history;
     }
+
+    public static final GamerPlay lastValidPlay(GameRuntime gameRuntime) {
+        List<GamerPlay> history = playHistory(gameRuntime);
+        for (int i = history.size() - 1; i >= 0; i --) {
+            GamerPlay gamerPlay = history.get(i);
+            if (gamerPlay.getLandlordCards() != LandlordCards.NO_CARDS) {
+                return gamerPlay;
+            }
+        }
+        return null;
+    }
     public static final void clearPlayHistory(GameRuntime gameRuntime) {
         gameRuntime.dataMap.remove(Play_History);
     }
@@ -170,10 +181,10 @@ public class LandlordGame implements GamePlay {
             gameRuntime.status = GameUtil.Game_Status_Before_Playing; //进入抢地主阶段
             gameRuntime.cards = GameUtil.allCards();
             this.shuffle();
-            gameRuntime.gamerRuntimeList.get(0).cards = gameRuntime.cards.subList(0, 17);
-            gameRuntime.gamerRuntimeList.get(1).cards = gameRuntime.cards.subList(17, 34);
-            gameRuntime.gamerRuntimeList.get(2).cards = gameRuntime.cards.subList(34, 51);
-            setLandlordRest(gameRuntime, gameRuntime.cards.subList(51, 54));
+            gameRuntime.gamerRuntimeList.get(0).cards = new ArrayList<>(gameRuntime.cards.subList(0, 17));
+            gameRuntime.gamerRuntimeList.get(1).cards = new ArrayList<>(gameRuntime.cards.subList(17, 34));
+            gameRuntime.gamerRuntimeList.get(2).cards = new ArrayList<>(gameRuntime.cards.subList(34, 51));
+            setLandlordRest(gameRuntime, new ArrayList<>(gameRuntime.cards.subList(51, 54)));
             this.sort();
             this.turn();
         }
@@ -209,9 +220,9 @@ public class LandlordGame implements GamePlay {
         addApproveHistory(gameRuntime, ga);
         this.turn();
         this.pushForApprove(SocketConst.CMD_UPDATE, ga);
-        if (gameRuntime.status == GameUtil.Game_Status_Playing) {
-            removeLandlordRest(gameRuntime);
-        }
+//        if (gameRuntime.status == GameUtil.Game_Status_Playing) {
+//            removeLandlordRest(gameRuntime);
+//        }
         return true;
     }
 
@@ -250,12 +261,9 @@ public class LandlordGame implements GamePlay {
                 gameRuntime.playOrder = newOrder;
             } else if (GameUtil.Game_Status_Playing.equals(gameRuntime.status)) {//出牌中
                 byte newOrder = OutUtil.nextOrder(gameRuntime.playOrder);
-                List<GamerPlay> playHistory = playHistory(gameRuntime);
-                if (playHistory != null && !playHistory.isEmpty()) {
-                    GamerPlay gp = playHistory.get(playHistory.size() - 1);
-                    if (gp.getPlayOrder() == newOrder) {
-                        clearPlayHistory(gameRuntime);
-                    }
+                GamerPlay gamerPlay = lastValidPlay(gameRuntime);
+                if (gamerPlay != null && gamerPlay.getPlayOrder() == newOrder) {
+                    clearPlayHistory(gameRuntime);
                 }
                 gameRuntime.playOrder = newOrder;
             }
@@ -300,6 +308,7 @@ public class LandlordGame implements GamePlay {
         }
         //1.检查是否有牌
         if (cards == null || cards.isEmpty()) {//要不起
+            playHistory(gameRuntime).add(new GamerPlay(gameRuntime.playOrder, LandlordCards.NO_CARDS, null));
             this.turn();
             push(SocketConst.CMD_UPDATE);
             return true;
@@ -310,18 +319,18 @@ public class LandlordGame implements GamePlay {
         GamerPlay newPlay = null;
         if (myCardsSet.containsAll(someCardsSet) && someCardsSet.size() == cards.size()) {
             //2.检查出牌是否满足规则
-            List<GamerPlay> playHistory = playHistory(gameRuntime);
+            GamerPlay lastValidPlay = lastValidPlay(gameRuntime);
             LandlordCards landlordCards = null;
-            if (playHistory.isEmpty()) {
+            if (lastValidPlay == null) {
                 landlordCards = LandlordUtil.checkCards(LandlordUtil.convertCards(cards));
             } else {
-                landlordCards = LandlordUtil.checkCardsForType(LandlordUtil.convertCards(cards), playHistory.get(playHistory.size() - 1).getLandlordCards());
+                landlordCards = LandlordUtil.checkCardsForType(LandlordUtil.convertCards(cards), lastValidPlay.getLandlordCards());
             }
             if (landlordCards == null) { //不满足规则返回false
                 return false;
             }
             newPlay = new GamerPlay(gameRuntime.playOrder, landlordCards, cards);
-            playHistory.add(newPlay);
+            playHistory(gameRuntime).add(newPlay);
             flag = true;
         }
         if (flag) {//4.执行出牌
@@ -353,8 +362,9 @@ public class LandlordGame implements GamePlay {
             return vo;
         }).collect(Collectors.toList());
         pushResult(resultVos);
-        //2.重置
-        this.init();
+        //2.设置游戏状态
+        gameRuntime.status = GameUtil.Game_Status_Over;
+//        this.init();
         return true;
     }
 
@@ -363,11 +373,11 @@ public class LandlordGame implements GamePlay {
      * @return
      */
     public List<Byte> suggest(String gamerId) {
-        List<GamerPlay> gamerPlays = playHistory(gameRuntime);
         GamerRuntime myself = getGamerByGamerId(gamerId);
         LandlordCards result = null;
-        if (gamerPlays != null && !gamerPlays.isEmpty()) {
-            result = LandlordUtil.suggestCards( LandlordUtil.convertCards(myself.cards), gamerPlays.get(gamerPlays.size() - 1).getLandlordCards());
+        GamerPlay lastValidPlay = lastValidPlay(gameRuntime);
+        if (lastValidPlay != null) {
+            result = LandlordUtil.suggestCards( LandlordUtil.convertCards(myself.cards), lastValidPlay.getLandlordCards());
         } else {
             result = LandlordUtil.suggestCards( LandlordUtil.convertCards(myself.cards), null);
         }

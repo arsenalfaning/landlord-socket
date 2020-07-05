@@ -26,6 +26,12 @@ public class OutUtil {
         byte myOrder = -1;
         for (GamerRuntime gr : gameRuntime.gamerRuntimeList) {
             GamerVo vo = toGamerVo(gr, gameRuntime);
+            Byte l = LandlordGame.getLandlord(gameRuntime);
+            if (l != null) {
+                vo.setLandlord(l.equals(gr.order));
+            } else {
+                vo.setLandlord(false);
+            }
             if (gr.gamerId.equals(gamerId)) {
                 gameVo.setMyself(vo);
                 myOrder = gr.order;
@@ -45,7 +51,7 @@ public class OutUtil {
                 GamerPlayVo vo = new GamerPlayVo();
                 vo.setGamer(encodePlayingGamer(finalMyOrder, e.getPlayOrder()));
                 vo.setCards(e.getCards());
-                vo.setType(e.getLandlordCards().getType());
+                vo.setType( e.getLandlordCards().getType());
                 return vo;
             }).collect(Collectors.toList()));
         }
