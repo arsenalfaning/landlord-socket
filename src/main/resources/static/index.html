@@ -56,6 +56,14 @@
                 }
             });
         }
+        function notPlay() {
+            sendInfo({
+                'cmd': 'play',
+                data: {
+                    cards: [],
+                }
+            });
+        }
         function suggest() {
             sendInfo({
                 'cmd': 'suggest'
@@ -73,6 +81,7 @@
     <button onclick="approve(false)">不抢地主</button>
 
     <button onclick="suggest()">建议</button>
+    <button onclick="notPlay()">不出</button>
     <button onclick="play()">出牌</button>
 </body>
 </html>

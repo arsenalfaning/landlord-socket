@@ -3,7 +3,6 @@ package com.flower.game.landlord;
 import com.flower.game.landlord.util.OutUtil;
 import com.flower.game.landlord.vo.GamerApprove;
 import com.flower.game.landlord.vo.GamerPlay;
-import com.flower.game.landlord.vo.GamerResultVo;
 import com.flower.game.room.RoomInterface;
 import com.flower.game.runtime.GamePlay;
 import com.flower.game.runtime.GameRuntime;
@@ -11,7 +10,6 @@ import com.flower.game.runtime.GameUtil;
 import com.flower.game.runtime.GamerRuntime;
 import com.flower.game.socket.SocketConst;
 
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -102,16 +100,19 @@ public class LandlordGame implements GamePlay {
         this.room = room;
         gameRuntime.gamerRuntimeList = new ArrayList<>(3);
         gameRuntime.dataMap = new HashMap<>();
+        gameRuntime.status = GameUtil.Game_Status_Init;
         this.init();
+    }
+
+    private void clearData() {
+        clearPlayHistory(gameRuntime);
+        removeLandlordRest(gameRuntime);
+        clearApproveHistory(gameRuntime);
     }
 
     @Override
     public void init() {
-        gameRuntime.status = GameUtil.Game_Status_Init;
-        clearPlayHistory(gameRuntime);
-        removeLandlordRest(gameRuntime);
         gameRuntime.gamerRuntimeList.stream().forEach(e -> {
-            e.cards = null;
             e.ready = false;
         });
     }
@@ -139,6 +140,7 @@ public class LandlordGame implements GamePlay {
         for (GamerRuntime gr : gameRuntime.gamerRuntimeList) {
             if (gr.gamerId.equals(gamerId) && !Boolean.TRUE.equals(gr.ready)) {
                 gr.ready = true;
+                gameRuntime.status = GameUtil.Game_Status_Init;
                 deal();
                 result = true;
                 break;
@@ -152,7 +154,7 @@ public class LandlordGame implements GamePlay {
 
     @Override
     synchronized public boolean unReady(String gamerId) {
-        if (gameRuntime.status == GameUtil.Game_Status_Init) {
+        if (gameRuntime.status == GameUtil.Game_Status_Init || gameRuntime.status == GameUtil.Game_Status_Over) {
             for (GamerRuntime gr : gameRuntime.gamerRuntimeList) {
                 if (gr.gamerId.equals(gamerId)) {
                     gr.ready = false;
@@ -178,6 +180,7 @@ public class LandlordGame implements GamePlay {
     @Override
     public boolean deal() {
         if ( gameRuntime.gamerRuntimeList.size() == 3 && gameRuntime.gamerRuntimeList.stream().allMatch(e -> Boolean.TRUE.equals(e.ready)) ) {
+            clearData();
             gameRuntime.status = GameUtil.Game_Status_Before_Playing; //进入抢地主阶段
             gameRuntime.cards = GameUtil.allCards();
             this.shuffle();
@@ -306,17 +309,18 @@ public class LandlordGame implements GamePlay {
         if (!myself.gamerId.equals(gamerId)) {
             return false;
         }
+        GamerPlay newPlay = null;
         //1.检查是否有牌
         if (cards == null || cards.isEmpty()) {//要不起
-            playHistory(gameRuntime).add(new GamerPlay(gameRuntime.playOrder, LandlordCards.NO_CARDS, null));
+            newPlay = new GamerPlay(gameRuntime.playOrder, LandlordCards.NO_CARDS, null);
+            playHistory(gameRuntime).add(newPlay);
             this.turn();
-            push(SocketConst.CMD_UPDATE);
+            pushForPlay(SocketConst.CMD_UPDATE, newPlay);
             return true;
         }
         Set<Byte> someCardsSet = new HashSet<>(cards);
         Set<Byte> myCardsSet = new HashSet<>(myself.cards);
         boolean flag = false;
-        GamerPlay newPlay = null;
         if (myCardsSet.containsAll(someCardsSet) && someCardsSet.size() == cards.size()) {
             //2.检查出牌是否满足规则
             GamerPlay lastValidPlay = lastValidPlay(gameRuntime);
@@ -334,37 +338,32 @@ public class LandlordGame implements GamePlay {
             flag = true;
         }
         if (flag) {//4.执行出牌
-            myCardsSet.removeAll(someCardsSet);
-            myself.cards = new ArrayList<>(myCardsSet);
-            Collections.sort(myself.cards, new LandlordSortComparator());
-            this.turn();
-            pushForPlay(SocketConst.CMD_UPDATE, newPlay);
-            if (myself.cards.isEmpty()) {
-                this.complete();
+            if (myCardsSet.size() == someCardsSet.size()) { //赢了
+                myself.cards = new ArrayList<>();
+                this.complete(newPlay);
+            } else {
+                myCardsSet.removeAll(someCardsSet);
+                myself.cards = new ArrayList<>(myCardsSet);
+                Collections.sort(myself.cards, new LandlordSortComparator());
+                this.turn();
+                pushForPlay(SocketConst.CMD_UPDATE, newPlay);
             }
         }
         return flag;
     }
 
+    public boolean complete(GamerPlay newPlay) {
+        gameRuntime.status = GameUtil.Game_Status_Over;
+        this.init();
+        pushForPlay(SocketConst.CMD_UPDATE, newPlay);
+        return true;
+    }
+
     @Override
     public boolean complete() {
-        //1.找到获胜方并创建结果
-        List<GamerResultVo> resultVos = gameRuntime.gamerRuntimeList.stream().map(e -> {
-            GamerResultVo vo = new GamerResultVo();
-            vo.setWin(e.cards.isEmpty());
-            if (vo.getWin()) {
-                vo.setDelta(BigDecimal.TEN);
-            } else {
-                vo.setDelta(BigDecimal.TEN.multiply(BigDecimal.valueOf(-1)));
-            }
-            vo.setGamerId(e.gamerId);
-            vo.setOrder(e.order);
-            return vo;
-        }).collect(Collectors.toList());
-        pushResult(resultVos);
-        //2.设置游戏状态
         gameRuntime.status = GameUtil.Game_Status_Over;
-//        this.init();
+        this.init();
+        push(SocketConst.CMD_UPDATE);
         return true;
     }
 
@@ -390,21 +389,15 @@ public class LandlordGame implements GamePlay {
     private GamerRuntime getGamerByGamerId(String gamerId) {
         return gameRuntime.gamerRuntimeList.stream().filter(e -> e.gamerId.equals(gamerId)).collect(Collectors.toList()).get(0);
     }
-
-    private void pushResult(List<GamerResultVo> resultVos) {
-        gameRuntime.gamerRuntimeList.stream().forEach(e -> {
-            room.messageTo(e.gamerId, OutUtil.toResultVo(resultVos, e.gamerId, SocketConst.CMD_OVER));
-        });
-    }
     private void push(String cmd) {
         gameRuntime.gamerRuntimeList.stream().forEach(e -> {
-            room.messageTo(e.gamerId, OutUtil.toGameVo(gameRuntime, e.gamerId, cmd));
+            room.messageTo(e.gamerId, OutUtil.toGameVo(gameRuntime, e.gamerId, cmd, null));
         });
     }
 
-    private void pushForPlay(String cmd, GamerPlay gamerPlay) {
+    private void pushForPlay(String cmd, GamerPlay newPlay) {
         gameRuntime.gamerRuntimeList.stream().forEach(e -> {
-            room.messageTo(e.gamerId, OutUtil.toGameVoForPlay(gameRuntime, e.gamerId, cmd, gamerPlay));
+            room.messageTo(e.gamerId, OutUtil.toGameVo(gameRuntime, e.gamerId, cmd, newPlay));
         });
     }
 

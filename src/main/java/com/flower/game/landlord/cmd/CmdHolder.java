@@ -34,22 +34,27 @@ public class CmdHolder{
     public String execute(String text, String gamerId) {
         ThinSocketIn socketIn = readTextMessage(text);
         if (socketIn != null) {
-            switch (socketIn.getCmd()) {
-                case SocketConst.CMD_ROOM:
-                    SocketIn<RoomParameter> roomIn = readObjectMessage(text, RoomParameter.class);
-                    SocketOut<Boolean> so = roomCmd.execute(roomIn, gamerId);
-                    return writeValue(so);
-                case SocketConst.CMD_READY:
-                    SocketOut<Boolean> readyOut = readyCmd.execute(null, gamerId);
-                    return writeValue(readyOut);
-                case SocketConst.CMD_PLAY:
-                    return writeValue(playCmd.execute(readObjectMessage(text, PlayParameter.class), gamerId));
-                case SocketConst.CMD_SUGGEST:
-                    return writeValue(suggestCmd.execute(readObjectMessage(text, Void.class), gamerId));
-                case MyGameConst.CMD_APPROVE:
-                    return writeValue(approveCmd.execute(readObjectMessage(text, ApproveParameter.class), gamerId));
+            try {
+                switch (socketIn.getCmd()) {
+                    case SocketConst.CMD_ROOM:
+                        SocketIn<RoomParameter> roomIn = readObjectMessage(text, RoomParameter.class);
+                        SocketOut<Boolean> so = roomCmd.execute(roomIn, gamerId);
+                        return writeValue(so);
+                    case SocketConst.CMD_READY:
+                        SocketOut<Boolean> readyOut = readyCmd.execute(null, gamerId);
+                        return writeValue(readyOut);
+                    case SocketConst.CMD_PLAY:
+                        return writeValue(playCmd.execute(readObjectMessage(text, PlayParameter.class), gamerId));
+                    case SocketConst.CMD_SUGGEST:
+                        return writeValue(suggestCmd.execute(readObjectMessage(text, Void.class), gamerId));
+                    case MyGameConst.CMD_APPROVE:
+                        return writeValue(approveCmd.execute(readObjectMessage(text, ApproveParameter.class), gamerId));
 
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+
         }
         return "";
     }

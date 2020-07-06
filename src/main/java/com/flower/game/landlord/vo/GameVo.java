@@ -19,4 +19,5 @@ public class GameVo {
     private List<GamerApproveVo> approveHistory;//抢地主历史
     private GamerApproveVo approve;//当前抢地主动作
     private List<Byte> landlordRest;//地主余牌
+    private ResultVo result;//结果
 }
