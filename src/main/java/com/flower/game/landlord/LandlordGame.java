@@ -9,6 +9,7 @@ import com.flower.game.runtime.GameRuntime;
 import com.flower.game.runtime.GameUtil;
 import com.flower.game.runtime.GamerRuntime;
 import com.flower.game.socket.SocketConst;
+import com.flower.game.util.ScheduleUtil;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -269,6 +270,12 @@ public class LandlordGame implements GamePlay {
                     clearPlayHistory(gameRuntime);
                 }
                 gameRuntime.playOrder = newOrder;
+                ScheduleUtil.addDelayTask(new Runnable() {
+                    @Override
+                    public void run() {
+                        System.out.println("delay schedule"); //TODO 进行真正的超时出牌
+                    }
+                }, 15);
             }
         }
         gameRuntime.playDeadline = turnDeadline();
