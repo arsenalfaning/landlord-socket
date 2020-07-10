@@ -7,6 +7,7 @@ import com.flower.game.util.SpringContextHolder;
 import org.springframework.util.StringUtils;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface RoomInterface {
 
@@ -41,7 +42,9 @@ public interface RoomInterface {
      * 获取gameplay
      * @return
      */
-    GamePlay getGamePlay();
+    default GamePlay getGamePlay() {
+        return null;
+    };
 
     /**
      * 广播推送
@@ -67,6 +70,22 @@ public interface RoomInterface {
         String value = cmdHolder.writeValue(object);
         if (!StringUtils.isEmpty(value)) {
             socketRegister.messageTo(gamerId, value);
+        }
+    }
+
+    /**
+     * 推送list
+     * @param gamerId
+     * @param list
+     */
+    default void messageTo(String gamerId, List list) {
+        SocketRegister socketRegister = SpringContextHolder.getBean(SocketRegister.class);
+        CmdHolder cmdHolder = SpringContextHolder.getBean(CmdHolder.class);
+        for (Object object : list) {
+            String value = cmdHolder.writeValue(object);
+            if (!StringUtils.isEmpty(value)) {
+                socketRegister.messageTo(gamerId, value);
+            }
         }
     }
 }

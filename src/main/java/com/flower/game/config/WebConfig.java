@@ -1,5 +1,6 @@
 package com.flower.game.config;
 
+import com.flower.game.handler.CommonHandler;
 import com.flower.game.handler.GameHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -29,9 +30,10 @@ public class WebConfig implements WebFluxConfigurer {
     }
 
     @Bean
-    public HandlerMapping handlerMapping(@Autowired GameHandler handler) {
+    public HandlerMapping handlerMapping(@Autowired GameHandler handler, CommonHandler commonHandler) {
         Map<String, WebSocketHandler> map = new HashMap<>();
         map.put("/hello", handler);
+        map.put("/common", commonHandler);
         int order = -1; // before annotated controllers
         return new SimpleUrlHandlerMapping(map, order);
     }
