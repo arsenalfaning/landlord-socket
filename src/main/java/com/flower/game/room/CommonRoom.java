@@ -24,11 +24,12 @@ public class CommonRoom implements RoomInterface{
         this.gamers = new ArrayList<>(gamers);
         this.game = new Game();
         this.addInitFrame();
-        this.scheduleTask = ScheduleUtil.addIntervalTask(() -> this.sendFrameTask(), 1000);
+//        this.scheduleTask = ScheduleUtil.addIntervalTask(() -> this.sendFrameTask(), 5000);
     }
 
     public void addAction(Map action) {
         this.game.receiveAction(action);
+        this.sendFrameTask();
     }
 
     /**
@@ -49,6 +50,7 @@ public class CommonRoom implements RoomInterface{
         action.put("action", 0);
         action.put("data", room);
         this.game.receiveAction(action);
+        this.sendFrameTask();
     }
 
     /**
@@ -69,7 +71,7 @@ public class CommonRoom implements RoomInterface{
     @Override
     public boolean addGamer(String gamerId) {
         if (gamersSet.contains(gamerId)) {
-            this.messageTo(gamerId, game.allGameFrames());
+            ScheduleUtil.addDelayTask(() -> this.messageTo(gamerId, game.allGameFrames()), 1);
             return true;
         }
         return false;

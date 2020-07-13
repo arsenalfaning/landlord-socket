@@ -51,6 +51,19 @@ public class CommonRoomService {
     }
 
     /**
+     * 断线玩家重连
+     * @param gamerId
+     * @return
+     */
+    public boolean joinOldGame(String gamerId) {
+        CommonRoom room = GAMER_ROOM_MAP.get(gamerId);
+        if (room != null) {
+            return room.addGamer(gamerId);
+        }
+        return false;
+    }
+
+    /**
      * 玩家离开房间
      * @param gamerId
      */

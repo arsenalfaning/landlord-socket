@@ -29,9 +29,11 @@ public class MatchService {
      * @param gamerId
      */
     public void addGamer(String gamerId) {
-        boolean r = this.gamers.add(gamerId);
-        if (r) {//添加成功
-            this.check();
+        if (!commonRoomService.joinOldGame(gamerId)) {
+            boolean r = this.gamers.add(gamerId);
+            if (r) {//添加成功
+                this.check();
+            }
         }
     }
 

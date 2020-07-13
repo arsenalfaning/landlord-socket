@@ -34,7 +34,11 @@ public class CommonHandler implements WebSocketHandler, CorsConfigurationSource 
     @Override
     public Mono<Void> handle(WebSocketSession session) {
         final String gamerId = SocketUtil.getGamerIdByQuery(session);
-        Flux<WebSocketMessage> common = session.receive().doOnSubscribe(s -> {
+        Mono<Void> output = session.send(Flux.create(sink -> {
+            SocketSender socketSender = new SocketSender(session, sink);
+            socketRegister.register(gamerId, socketSender);
+        }));
+        Mono<Void> input = session.receive().doOnSubscribe(s -> {
             //连接开始
             log("subscribe");
             SocketUtil.setGamerIdByAttribute(session, gamerId);
@@ -62,19 +66,15 @@ public class CommonHandler implements WebSocketHandler, CorsConfigurationSource 
                 if (message.getType() ==  WebSocketMessage.Type.TEXT) {
                     String payload = message.getPayloadAsText();
                     commonRoomService.receiveAction(payload, gamerId);
-                    return Mono.just(session.textMessage("ok"));
                 }
-                return Mono.just(session.textMessage("error"));
+                return Mono.empty();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return Mono.just(null);
-        });
-        Mono<Void> output = session.send(Flux.create(sink -> {
-            SocketSender socketSender = new SocketSender(session, sink);
-            socketRegister.register(gamerId, socketSender);
-        }));
-        return Mono.zip(session.send(common), output).then();
+            return Mono.empty();
+        }).then();
+
+        return Mono.zip(input, output).then();
     }
 
     @Override
