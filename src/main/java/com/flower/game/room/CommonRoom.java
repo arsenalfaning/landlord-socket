@@ -1,16 +1,29 @@
 package com.flower.game.room;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flower.game.dto.EndAction;
 import com.flower.game.dto.GameFrame;
 import com.flower.game.dto.GamerBean;
 import com.flower.game.dto.RoomBean;
 import com.flower.game.game.Game;
 import com.flower.game.util.ScheduleUtil;
+import com.flower.game.util.SpringContextHolder;
 import reactor.core.Disposable;
 
 import java.util.*;
 
 public class CommonRoom implements RoomInterface{
 
+    /**
+     * 游戏结束
+     */
+    static final String End_Action = "6";
+    static final String Action_Key = "action";
+    static final String Order_Key = "order";
+    static final String Data_Key = "data";
+
+    private List<EndAction> result = Collections.synchronizedList(new ArrayList<>(3));
     private LinkedHashSet<String> gamersSet;
     private List<String> gamers;
     private Game game;
@@ -27,9 +40,28 @@ public class CommonRoom implements RoomInterface{
 //        this.scheduleTask = ScheduleUtil.addIntervalTask(() -> this.sendFrameTask(), 5000);
     }
 
-    public void addAction(Map action) {
+    /**
+     * @param action
+     * @return 是否结束
+     * @throws JsonProcessingException
+     */
+    public boolean addAction(Map action) throws JsonProcessingException {
+        if (action.get(Action_Key).toString().equals(End_Action)) {
+            ObjectMapper om = SpringContextHolder.getBean(ObjectMapper.class);
+            result.add(om.readValue(om.writeValueAsString(action), EndAction.class));
+            if (result.size() >= 2) {//可以进行结算
+                this.calculateResult();
+                this.close();
+                return true;
+            }
+        }
         this.game.receiveAction(action);
         this.sendFrameTask();
+        return false;
+    }
+
+    private void calculateResult() {
+
     }
 
     /**
@@ -65,7 +97,9 @@ public class CommonRoom implements RoomInterface{
      * 关闭房间
      */
     public void close() {
-        scheduleTask.dispose();
+        if (scheduleTask != null) {
+            scheduleTask.dispose();
+        }
     }
 
     @Override

@@ -43,6 +43,7 @@ public class MatchService {
      */
     public void removeGamer(String gamerId) {
         this.gamers.remove(gamerId);
+        commonRoomService.removeGamer(gamerId);
     }
 
     /**

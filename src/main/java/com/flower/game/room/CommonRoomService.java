@@ -42,7 +42,9 @@ public class CommonRoomService {
             CommonRoom room = GAMER_ROOM_MAP.get(gamerId);
             if (room != null) {
                 Map action = objectMapper.readValue(payload, Map.class);
-                room.addAction(action);
+                if (room.addAction(action)) {//游戏已结束
+                    room.allGamers().forEach(id -> GAMER_ROOM_MAP.remove(id));
+                }
             }
 
         } catch (JsonProcessingException e) {
@@ -68,6 +70,9 @@ public class CommonRoomService {
      * @param gamerId
      */
     public void removeGamer(String gamerId) {
-        GAMER_ROOM_MAP.remove(gamerId);
+        CommonRoom room = GAMER_ROOM_MAP.get(gamerId);
+        if (room != null) {
+//            GAMER_ROOM_MAP.remove(gamerId);
+        }
     }
 }
