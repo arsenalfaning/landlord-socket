@@ -50,7 +50,7 @@ public class CommonRoom implements RoomInterface{
         action.put("action", 0);
         action.put("data", room);
         this.game.receiveAction(action);
-        this.sendFrameTask();
+        ScheduleUtil.addDelayTask(() -> this.sendFrameTask(), 1);
     }
 
     /**
