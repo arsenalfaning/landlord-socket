@@ -26,6 +26,7 @@ public class CommonRoom implements RoomInterface{
     private LinkedHashSet<String> gamersSet;
     private List<String> gamers;
     private Game game;
+    private boolean over = false;
     /**
      * 定时发送帧任务
      */
@@ -44,20 +45,18 @@ public class CommonRoom implements RoomInterface{
      * @return 是否结束
      * @throws JsonProcessingException
      */
-    public boolean addAction(Map action) throws JsonProcessingException {
+    public void addAction(Map action) throws JsonProcessingException {
         if (action.get(Action_Key).toString().equals(End_Action)) {
             ObjectMapper om = SpringContextHolder.getBean(ObjectMapper.class);
             result.add(om.readValue(om.writeValueAsString(action), EndAction.class));
             if (result.size() >= 2) {//可以进行结算
                 this.calculateResult();
                 this.close();
-                return true;
+                this.over = true;
             }
-            return false;
         }
         this.game.receiveAction(action);
         this.sendFrameTask();
-        return false;
     }
 
     private void calculateResult() {
@@ -116,6 +115,10 @@ public class CommonRoom implements RoomInterface{
         if (scheduleTask != null) {
             scheduleTask.dispose();
         }
+    }
+
+    public boolean isOver() {
+        return this.over;
     }
 
     @Override

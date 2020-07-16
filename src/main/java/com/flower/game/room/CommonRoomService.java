@@ -2,6 +2,7 @@ package com.flower.game.room;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.flower.game.util.ScheduleUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class CommonRoomService {
     public void openRoom(List<String> gamers) {
         CommonRoom room = new CommonRoom(gamers);
         gamers.forEach(gamerId -> GAMER_ROOM_MAP.put(gamerId, room));
+        ScheduleUtil.addDelayTask(()->{closeRoom(room);}, 3600);//一句比赛最多一小时
     }
 
     /**
@@ -42,8 +44,9 @@ public class CommonRoomService {
             CommonRoom room = GAMER_ROOM_MAP.get(gamerId);
             if (room != null) {
                 Map action = objectMapper.readValue(payload, Map.class);
-                if (room.addAction(action)) {//游戏已结束
-                    room.allGamers().forEach(id -> GAMER_ROOM_MAP.remove(id));
+                room.addAction(action);
+                if (room.isOver()) {//游戏已结束
+                    closeRoom(room);
                 }
             }
 
@@ -74,5 +77,9 @@ public class CommonRoomService {
         if (room != null) {
 //            GAMER_ROOM_MAP.remove(gamerId);
         }
+    }
+
+    private void closeRoom(CommonRoom room) {
+        room.allGamers().forEach(id -> GAMER_ROOM_MAP.remove(id));
     }
 }
