@@ -1,5 +1,6 @@
 package com.flower.game.room;
 
+import com.flower.game.dto.GameFrame;
 import com.flower.game.landlord.cmd.CmdHolder;
 import com.flower.game.runtime.GamePlay;
 import com.flower.game.socket.SocketRegister;
@@ -51,6 +52,9 @@ public interface RoomInterface {
      * @param object
      */
     default void broadcast(Object object) {
+        if (object instanceof GameFrame) {
+            ((GameFrame) object).setSt(System.currentTimeMillis());
+        }
         SocketRegister socketRegister = SpringContextHolder.getBean(SocketRegister.class);
         CmdHolder cmdHolder = SpringContextHolder.getBean(CmdHolder.class);
         String value = cmdHolder.writeValue(object);
@@ -65,6 +69,9 @@ public interface RoomInterface {
      * @param gamerId
      */
     default void messageTo(String gamerId, Object object) {
+        if (object instanceof GameFrame) {
+            ((GameFrame) object).setSt(System.currentTimeMillis());
+        }
         SocketRegister socketRegister = SpringContextHolder.getBean(SocketRegister.class);
         CmdHolder cmdHolder = SpringContextHolder.getBean(CmdHolder.class);
         String value = cmdHolder.writeValue(object);
@@ -82,6 +89,9 @@ public interface RoomInterface {
         SocketRegister socketRegister = SpringContextHolder.getBean(SocketRegister.class);
         CmdHolder cmdHolder = SpringContextHolder.getBean(CmdHolder.class);
         for (Object object : list) {
+            if (object instanceof GameFrame) {
+                ((GameFrame) object).setSt(System.currentTimeMillis());
+            }
             String value = cmdHolder.writeValue(object);
             if (!StringUtils.isEmpty(value)) {
                 socketRegister.messageTo(gamerId, value);

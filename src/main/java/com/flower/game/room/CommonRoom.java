@@ -7,6 +7,7 @@ import com.flower.game.dto.GameFrame;
 import com.flower.game.dto.GamerBean;
 import com.flower.game.dto.RoomBean;
 import com.flower.game.game.Game;
+import com.flower.game.service.GamerPointService;
 import com.flower.game.util.ScheduleUtil;
 import com.flower.game.util.SpringContextHolder;
 import reactor.core.Disposable;
@@ -20,8 +21,6 @@ public class CommonRoom implements RoomInterface{
      */
     static final String End_Action = "6";
     static final String Action_Key = "action";
-    static final String Order_Key = "order";
-    static final String Data_Key = "data";
 
     private List<EndAction> result = Collections.synchronizedList(new ArrayList<>(3));
     private LinkedHashSet<String> gamersSet;
@@ -54,6 +53,7 @@ public class CommonRoom implements RoomInterface{
                 this.close();
                 return true;
             }
+            return false;
         }
         this.game.receiveAction(action);
         this.sendFrameTask();
@@ -61,13 +61,29 @@ public class CommonRoom implements RoomInterface{
     }
 
     private void calculateResult() {
-
+        Map<String, Long> gamerPointMap = new HashMap<>();
+        Map<String, Long> validGamerPointMap = new HashMap<>();
+        this.result.forEach(ea -> {
+            ea.getData().forEach(gb -> {
+                Long p = gamerPointMap.get(gb.getGamerId());
+                if (p == null) {
+                    gamerPointMap.put(gb.getGamerId(), gb.getPoint());
+                } else if (p.equals(gb.getPoint())) {
+                    validGamerPointMap.put(gb.getGamerId(), p);
+                }
+            });
+        });
+        validGamerPointMap.forEach((id, p) -> {
+            GamerPointService gamerPointService = SpringContextHolder.getBean(GamerPointService.class);
+            gamerPointService.modifyGamerPoint(id, p);
+        });
     }
 
     /**
      * 添加初始化帧
      */
     private void addInitFrame() {
+        GamerPointService gamerPointService = SpringContextHolder.getBean(GamerPointService.class);
         RoomBean room = new RoomBean();
         room.setSeed(System.currentTimeMillis());
         room.setGamers(new ArrayList<>(3));
@@ -75,7 +91,7 @@ public class CommonRoom implements RoomInterface{
             GamerBean gb = new GamerBean();
             gb.setGamerId(gamers.get(i));
             gb.setOrder(i);
-            gb.setPoint(10000L);
+            gb.setPoint(gamerPointService.getPointByGamerId(gb.getGamerId()));
             room.getGamers().add(gb);
         }
         Map<String, Object> action = new HashMap<>();
