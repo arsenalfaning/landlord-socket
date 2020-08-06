@@ -1,6 +1,7 @@
 package com.flower.game.socket;
 
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.socket.WebSocketSession;
 
 import java.util.Collection;
 import java.util.Map;
@@ -54,5 +55,18 @@ public class SocketRegister {
         if (socketSender != null) {
             socketSender.send(text);
         }
+    }
+
+    /**
+     * 获取session
+     * @param gamerId
+     * @return
+     */
+    public WebSocketSession getSession(String gamerId) {
+        SocketSender socketSender = SOCKET_SESSION_MAP.get(gamerId);
+        if (socketSender != null) {
+            return socketSender.getWebSocketSession();
+        }
+        return null;
     }
 }

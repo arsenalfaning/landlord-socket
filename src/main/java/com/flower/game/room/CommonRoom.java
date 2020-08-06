@@ -20,6 +20,7 @@ public class CommonRoom implements RoomInterface{
      * 游戏结束
      */
     static final String End_Action = "6";
+    static final String Room_Action = "0";
     static final String Action_Key = "action";
 
     private List<EndAction> result = Collections.synchronizedList(new ArrayList<>(3));
@@ -85,7 +86,11 @@ public class CommonRoom implements RoomInterface{
         GamerPointService gamerPointService = SpringContextHolder.getBean(GamerPointService.class);
         RoomBean room = new RoomBean();
         room.setSeed(System.currentTimeMillis());
-        room.setGamers(new ArrayList<>(3));
+        room.setGamers(new LinkedList<>());
+        for (byte i = 0; i < 54; i ++) {
+            room.getCards().add(i);
+        }
+        Collections.shuffle(room.getCards());
         for (int i = 0; i < gamers.size(); i ++) {
             GamerBean gb = new GamerBean();
             gb.setGamerId(gamers.get(i));
@@ -94,7 +99,7 @@ public class CommonRoom implements RoomInterface{
             room.getGamers().add(gb);
         }
         Map<String, Object> action = new HashMap<>();
-        action.put("action", 0);
+        action.put("action", Room_Action);
         action.put("data", room);
         this.game.receiveAction(action);
         ScheduleUtil.addDelayTask(() -> this.sendFrameTask(), 1);

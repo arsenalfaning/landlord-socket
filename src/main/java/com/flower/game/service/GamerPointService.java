@@ -17,7 +17,7 @@ public class GamerPointService {
         if (GAMER_POINT_MAP.containsKey(gamerId)) {
             return GAMER_POINT_MAP.get(gamerId);
         }
-        GAMER_POINT_MAP.put(gamerId, 10000L);
+        GAMER_POINT_MAP.put(gamerId, 1000L);
         return 1000L;
     }
 
