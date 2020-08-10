@@ -27,5 +27,15 @@ public class TeamRoomService {
         return true;
     }
 
-
+    /**
+     * 处理action
+     * @param action
+     * @param roomId
+     */
+    public void receiveAction(Map action, String roomId) {
+        TeamRoom room = Room_Map.get(roomId);
+        if (room != null) {
+            room.addAction(action);
+        }
+    }
 }

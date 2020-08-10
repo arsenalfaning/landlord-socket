@@ -5,6 +5,7 @@ import com.flower.game.dto.GamerBean;
 import com.flower.game.dto.RoomBean;
 import com.flower.game.game.Game;
 import com.flower.game.service.GamerPointService;
+import com.flower.game.util.ScheduleUtil;
 import com.flower.game.util.SpringContextHolder;
 
 import java.util.*;
@@ -15,7 +16,7 @@ public class TeamRoom implements RoomInterface{
      * 游戏结束
      */
     static final String End_Action = "6";
-    static final String Room_Action = "0";
+    static final String Room_Action = "room";
     static final String Action_Key = "action";
 
     private List<String> gamers;
@@ -58,6 +59,7 @@ public class TeamRoom implements RoomInterface{
             gb.setPoint(gamerPointService.getPointByGamerId(gb.getGamerId()));
             room.getGamers().add(gb);
         }
+        Collections.shuffle(room.getGamers());
         Map<String, Object> action = new HashMap<>();
         action.put("action", Room_Action);
         action.put("data", room);
@@ -74,7 +76,11 @@ public class TeamRoom implements RoomInterface{
 
     @Override
     public boolean addGamer(String gamerId) {
-        return hasGamer(gamerId);
+        boolean flag = hasGamer(gamerId);
+        if (flag) {
+            ScheduleUtil.addDelayTask(() -> this.messageTo(gamerId, game.allGameFrames()), 1);
+        }
+        return flag;
     }
 
     @Override

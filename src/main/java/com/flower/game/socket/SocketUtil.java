@@ -12,6 +12,10 @@ public class SocketUtil {
         return parseUserByURI(webSocketSession).get(SocketConst.PARAM_TOKEN);
     }
 
+    public static String getRoomIdByQuery(WebSocketSession webSocketSession) {
+        return parseUserByURI(webSocketSession).get(SocketConst.PARAM_ROOM);
+    }
+
     public static String getGamerIdByAttribute(WebSocketSession webSocketSession) {
         return webSocketSession.getAttributes().get(SocketConst.PARAM_TOKEN).toString();
     }

@@ -16,4 +16,5 @@ public class SocketConst {
     public static final String CODE_ERROR = "error";//未知错误（重大错误，表明游戏可能无法继续）
 
     public static final String PARAM_TOKEN = "token";//用户唯一标识
+    public static final String PARAM_ROOM = "room";//房间号
 }
