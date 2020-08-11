@@ -38,32 +38,33 @@ public class TexasHandler implements WebSocketHandler, CorsConfigurationSource {
     @Override
     public Mono<Void> handle(WebSocketSession session) {
         final String gamerId = SocketUtil.getGamerIdByQuery(session);
-        final String roomId = SocketUtil.getGamerIdByQuery(session);
+        final String roomId = SocketUtil.getRoomIdByQuery(session);
         Mono<Void> output = session.send(Flux.create(sink -> {
             SocketSender socketSender = new SocketSender(session, sink);
             socketRegister.register(gamerId, socketSender);
         }));
         Mono<Void> input = session.receive().doOnSubscribe(s -> {
             //连接开始
-            log("subscribe");
+            log("TexasHandler subscribe");
             SocketUtil.setGamerIdByAttribute(session, gamerId);
+            teamRoomService.enter(roomId, gamerId);
         }).doOnCancel(() -> {
             //连接结束
-            log("cancel");
+            log("TexasHandler cancel");
         }).doOnError(e -> {
             //出错
-            log("error");
+            log("TexasHandler error");
             log(e);
         }).doOnTerminate(() -> {
             //关闭连接
-            log("terminate");
+            log("TexasHandler terminate");
         }).doOnRequest(value -> {
-            log("request");
+            log("TexasHandler request");
         }).doOnComplete(() -> {
-            log("complete");
+            log("TexasHandler complete");
             socketRegister.remove(gamerId);
         }).doOnNext(message -> {
-            log("next");
+            log("TexasHandler next");
         }).concatMap((message) -> {
             try {
                 if (message.getType() ==  WebSocketMessage.Type.TEXT) {

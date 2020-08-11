@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class StartGameAction {
 
-    private Integer action;
+    private String action;
     private StartGameBean data;
 }

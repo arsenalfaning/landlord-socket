@@ -39,6 +39,7 @@ public class TeamHandler implements WebSocketHandler, CorsConfigurationSource {
             //连接开始
             log("subscribe");
             SocketUtil.setGamerIdByAttribute(session, gamerId);
+
         }).doOnCancel(() -> {
             //连接结束
             log("cancel");

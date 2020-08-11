@@ -46,6 +46,7 @@ public class TeamService {
     }
 
     public void receiveAction(Map action, String gamerId) {
+        if (continueGame(gamerId)) return;
         String actionValue = action.get(Action_Key).toString();
         if (Team_Create_Action.equals(actionValue)) {
             teamCreate(gamerId);
@@ -56,6 +57,19 @@ public class TeamService {
             StartGameAction startGameAction = JsonUtil.readValue(JsonUtil.toString(action), StartGameAction.class);
             start(gamerId, startGameAction);
         }
+    }
+
+    /**
+     * 如果玩家有未完成的游戏，则推送
+     * @param gamerId
+     */
+    public boolean continueGame(String gamerId) {
+        StartGameAction startGameAction = teamRoomService.getRoomByGamerId(gamerId);
+        if (startGameAction != null) {
+            socketRegister.messageTo(gamerId, JsonUtil.toString(startGameAction));
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -112,7 +126,7 @@ public class TeamService {
             return;
         }
         //2.开房
-        teamRoomService.openRoom(startGameAction.getData().getRoomId(), team.gamerIdSet);
+        teamRoomService.openRoom(startGameAction.getData().getRoomId(), startGameAction, team.gamerIdSet);
 
         //3.通知
         updateStartGame(team, startGameAction);

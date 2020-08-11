@@ -3,6 +3,7 @@ package com.flower.game.room;
 import com.flower.game.dto.GameFrame;
 import com.flower.game.dto.GamerBean;
 import com.flower.game.dto.RoomBean;
+import com.flower.game.dto.StartGameAction;
 import com.flower.game.game.Game;
 import com.flower.game.service.GamerPointService;
 import com.flower.game.util.ScheduleUtil;
@@ -22,9 +23,10 @@ public class TeamRoom implements RoomInterface{
     private List<String> gamers;
     private String roomId;
     private Game game;
+    private StartGameAction startGameAction;
 
-    public TeamRoom(String roomId, List<String> gamers) {
-        this.roomId = roomId;
+    public TeamRoom(StartGameAction startGameAction, List<String> gamers) {
+        this.startGameAction = startGameAction;
         this.gamers = gamers;
         Collections.shuffle(this.gamers);
         this.game = new Game();
@@ -64,6 +66,7 @@ public class TeamRoom implements RoomInterface{
         action.put("action", Room_Action);
         action.put("data", room);
         this.game.receiveAction(action);
+        this.game.buildGameFrame();
     }
 
     /**
@@ -96,5 +99,9 @@ public class TeamRoom implements RoomInterface{
     @Override
     public Collection<String> allGamers() {
         return gamers;
+    }
+
+    public StartGameAction getStartGameAction() {
+        return startGameAction;
     }
 }
