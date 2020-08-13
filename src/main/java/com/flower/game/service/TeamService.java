@@ -23,7 +23,7 @@ public class TeamService {
     private static final String Action_Key = "action";
     private static final String Team_Join_Action = "join";
 
-    private static final String Texas_Server_URI = "ws://192.168.0.100:8080/texas";
+    private static final String Texas_Server_URI = "ws://192.168.0.99:8080/texas";
 
     private SocketRegister socketRegister;
     private TeamRoomService teamRoomService;
