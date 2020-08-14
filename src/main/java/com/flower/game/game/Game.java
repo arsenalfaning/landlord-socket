@@ -29,6 +29,15 @@ public class Game {
     }
 
     /**
+     * 清空所有帧
+     */
+    public void clearFrame() {
+        this.frameHistory.clear();
+        this.actionForSend.clear();
+        this.version.set(1);
+    }
+
+    /**
      * 生成帧
      * @return
      */

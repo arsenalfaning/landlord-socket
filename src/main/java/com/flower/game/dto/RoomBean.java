@@ -9,5 +9,7 @@ import java.util.List;
 public class RoomBean {
     private List<GamerBean> gamers;
     private Long seed;
+    private String captain;//队长
+    private Integer buttonIndex;//庄位
     private List<Byte> cards = new LinkedList<>();
 }
